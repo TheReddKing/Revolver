@@ -47,10 +47,18 @@
   var user;
   socket.on('user handshake', function(handshake){
 	user = handshake;
-	alert("HI " + handshake["key"]);
+	alert("HI " + handshake["key"]+"\nWe should add a pay-to-win feature. \n-Andrew \"Money-Whore\" Tan");
 
   });
 
+  socket.on('requestUsers', function(users){
+    $('#players').empty();
+    for(var i = users.length-1;i>=0;i--)
+	{
+	    $('#players').append("<li>PLAYER HAS JOINED THE BATTLE</li>");
+		
+	}
+  });
   var ids = [];
   socket.on('data', function(allPlayers,allBullets){
 	<!-- $('#messages').append($('<li>').text(msg)); -->
@@ -100,12 +108,13 @@
 	}
 	//Revolver.loop();
   });
-
+  
   //For latency
 	var startTime = Date.now();
 	setInterval(function() {
 	  startTime = Date.now();
 	  socket.emit('ping');
+	  socket.emit('requestUsers');
 	}, 6000);
 
 	socket.on('pong', function() {

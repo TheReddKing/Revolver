@@ -145,10 +145,14 @@ Revolver.Ocelot = function(){
 };
 Revolver.Bullet = function(x,y,isSelf){
 	this.r = 10;
-    color = "#66FF99"
+    
     if(isSelf) {
+	    
         color = "#663399"
     }
+	else{
+	    color = "#66FF99"
+	}
 	Revolver.Draw.circle(x,y,this.r,color);
 };
 Revolver.click = function() {

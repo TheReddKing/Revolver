@@ -17,6 +17,37 @@ app.get('/css.css', function(req, res){
 var users = [];
 var bullets= [];
 var nextUserNum = 1;
+var bulletWrapper =  function(){
+    this.bullet;
+    this.bulletNext;
+    this.init = function(bullet) {
+        this.bullet = bullet;
+    },
+    this.addNextBullet = function(bulletNext) {
+        this.bulletNext = bulletNext;
+    },
+    this.nextBullet = function() {
+        return bulletNext;
+    }
+}
+var bulletController = {
+    moreBullets: null,
+    moreBulletsEnd : null, //Of wrapper bulletWrapper
+    bullets : [],
+
+    init:function(){
+	},
+    addBullet:function(bullet) {
+        var wrapper = new bulletWrapper();
+        wrapper.init(bullet);
+        if(moreBullets == null) {
+            moreBullets = wrapper;
+            moreBulletsEnd = wrapper;
+        } else {
+            moreBulletsEnd.addNextBullet(wrapper);
+        }
+    }
+};
 io.on('connection', function(socket){
 
   nextUserNum++;
@@ -42,7 +73,7 @@ io.on('connection', function(socket){
     	var spacing = 40;
     	var x=Math.cos(user.angle)*spacing + user.location.x;
     	var y=Math.sin(user.angle)*spacing + user.location.y;
-        var bullet = {id:user.id, location:{x:x, y:y},angle:user.angle+(Math.PI/2)};
+        var bullet = {id:user.id, location:{x:x, y:y},angle:user.angle+(Math.PI/2),isExistant:true};
     	console.log(x + " " + y + "DELAY " + (user.angle-angle));
         user.canShoot = false;
         setTimeout(function() {
@@ -50,6 +81,13 @@ io.on('connection', function(socket){
         },1000);
     	bullets.push(bullet);
      }
+  });
+  socket.on('requestUsers', function(){
+      var localusers = [];
+      for(var i =0;i<users.length;i++) {
+          localusers.push({id:users[i].id});
+      }
+      io.emit('requestUsers', localusers);
   });
   socket.on('location', function(location) {
 	    user.locationToward = location;
@@ -96,16 +134,16 @@ setInterval(function(){
           		    bullets.splice(b,b+1);
                     break;
 				}
-                
+
 			}
 		}
 	}
-	
+
 	for(var b =bullets.length-1;b>0;b--)
 	{
 		for(var b2 = b-1;b2>=0;b2--)
 		{
-		    
+
 		    if(collides(bullets[b],bullets[b2],10,10))
 			{
 			    console.log("BULLET ON BULLET COLLISION");
@@ -162,6 +200,9 @@ setInterval(function(){
 	for(var i=0;i<bullets.length;i++)
 	{
 	    var b=bullets[i];
+        if(!b.isExistant)
+            continue;
+
 		b.location.x+=Math.cos(b.angle) * 15;//bullet speed
 		b.location.y+=Math.sin(b.angle) * 15;
 		allBullets.push({location:b.location,id:b.id});
