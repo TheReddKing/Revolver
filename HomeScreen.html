@@ -2,60 +2,64 @@
 <!-- https://github.com/huytd/agar.io-clone/blob/master/src/client/css/main.css -->
 <!doctype html>
 <html lang="en">
+
 <head>
 	<title>Revolver</title>
 	<link href='http://fonts.googleapis.com/css?family=Lato&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
 </head>
+
 <body>
 	<div id="StartMenuWrapper">
-		<div id ="startmenu" style = "text-align: center">
+		<div id="startmenu" style="text-align: center">
 			<p id="title">Revolver</p>
 			<p id="subtitle">Where every shot is a 360 noscope!</p>
 			<!-- <form id="form" action="#" method="get" enctype="application/x-www-form-urlencoded"> -->
-				<p style="font-size: 12px" >Username:</p>
-				<input required type="text" name="UserName" tabindex="0" autofocus placeholder="Enter username here" id="playerNameInput" maxlength="16">
-				<br/>
-				<b class="input-error" style= "font-size: 10px; font-weight: 500; color: #999999;";>(Username must be alphanumeric)</b>
-				<br/>
-				<p style="font-size: 12px" >Room Number:</p>
-				<input required type="text" name="RoomNumber" value="1" id="roomNumberInput" maxlength="5">
-				<br/>
-				<button  id="startButton" value="submit" style="margin-top: 10px">Play</button>
-				
+			<p style="font-size: 12px">Username:</p>
+			<input required type="text" name="UserName" tabindex="0" autofocus placeholder="Enter username here" id="playerNameInput" maxlength="16">
+			<br/>
+			<b class="input-error" style="font-size: 10px; font-weight: 500; color: #999999;" ;>(Username must be alphanumeric)</b>
+			<br/>
+			<p style="font-size: 12px">Room Number:</p>
+			<input required type="text" name="RoomNumber" value="1" id="roomNumberInput" maxlength="5">
+			<br/>
+			<button id="startButton" value="submit" style="margin-top: 10px">Play</button>
+
 			<!-- </form> -->
-	</div>
+		</div>
 	</div>
 </body>
 
 <style>
-* {
-font-family: Lato, sans-serif;
-font size: 14px;
-}
+	* {
+		font-family: Lato, sans-serif;
+		font size: 14px;
+	}
 
-html, body {background-color: #eeeeee;}
+	html,
+	body {
+		background-color: #eeeeee;
+	}
 
-#StartMenuWrapper {
-position:fixed;
-top:50%;
-left:50%;
-width: 400px;
-height:250px;
-margin-top: -125px;
-margin-left: -200px;
-border: 1px solid #000;
-background-color: #fff;
-}
+	#StartMenuWrapper {
+		position: fixed;
+		top: 50%;
+		left: 50%;
+		width: 400px;
+		height: 250px;
+		margin-top: -125px;
+		margin-left: -200px;
+		border: 1px solid #000;
+		background-color: #fff;
+	}
 
-#title {
-font-size: 32px;
-font-weight: 900;
-margin-top: 0px;
-margin-bottom: -10px;
-}
+	#title {
+		font-size: 32px;
+		font-weight: 900;
+		margin-top: 0px;
+		margin-bottom: -10px;
+	}
 
-#roomNumberInput {
-margin-top: 0px;
-}
-
+	#roomNumberInput {
+		margin-top: 0px;
+	}
 </style>

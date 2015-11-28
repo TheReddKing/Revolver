@@ -1,23 +1,62 @@
 <!DOCTYPE html>
 <html>
-  <head>
+
+<head>
     <title>Revolver</title>
     <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; 
-        font-family: Lato, sans-serif;}
-      body { font: 13px Lato, Helvetica, Arial; }
-      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
-      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
-      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
-      #messages { list-style-type: none; margin: 0; padding: 0; }
-      #messages li { padding: 5px 10px; }
-      #messages li:nth-child(odd) { background: #eee; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Lato, sans-serif;
+        }
+
+        body {
+            font: 13px Lato, Helvetica, Arial;
+        }
+
+        form {
+            background: #000;
+            padding: 3px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+
+        form input {
+            border: 0;
+            padding: 10px;
+            width: 90%;
+            margin-right: .5%;
+        }
+
+        form button {
+            width: 9%;
+            background: rgb(130, 224, 255);
+            border: none;
+            padding: 10px;
+        }
+
+        #messages {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        #messages li {
+            padding: 5px 10px;
+        }
+
+        #messages li:nth-child(odd) {
+            background: #eee;
+        }
     </style>
     <link rel="stylesheet" type="text/css" href="css.css">
-  <link href='http://fonts.googleapis.com/css?family=Lato&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
-  <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
-  <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
-  </head>
+    <link href='http://fonts.googleapis.com/css?family=Lato&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+</head>
+
 <body id='body' style=" background-color: #eeeeee;">
 
     <!-- <ul id="messages"></ul>
@@ -25,259 +64,248 @@
       <input id="m" autocomplete="off" /><button>Send</button>
     </form> -->
 
-<div id='scoreboard' style="position:fixed;right:0px;">
-<h2 id="roomnum" style='font-weight: bold;font-family: Lato, sans-serif; font-size: 16px'>Room 10000</h2>
+    <div id='scoreboard' style="position:fixed;right:0px;">
+        <h2 id="roomnum" style='font-weight: bold;font-family: Lato, sans-serif; font-size: 16px'>Room 10000</h2>
 
-<ul id="players">
-  <table id="playertable" style="width:100%">
+        <ul id="players">
+            <table id="playertable" style="width:100%">
 
-  </table>
-</ul>
+            </table>
+        </ul>
 
-<ul id="killLog">
-  <h3 style='font-weight: bold;font-family: Lato, sans-serif; font-size: 16px'>Kill Log</h3>
-</div>
-<!-- <div id='killmeplz' style="position:fixed;">
+        <ul id="killLog">
+            <h3 style='font-weight: bold;font-family: Lato, sans-serif; font-size: 16px'>Kill Log</h3>
+    </div>
+    <!-- <div id='killmeplz' style="position:fixed;">
 
-  
+
 </ul> -->
-</div>
+    </div>
 
-  <iframe id="yoface" width= "100%" height = "100%" style="position:fixed;" src="login"></iframe>
-  <iframe id="endgamefantasy"width= "100%" height = "100%" src="endgame"></iframe>
-  <iframe id="pregamefantasy"width= "100%" height = "100%" style = "display: block;" src="pregame"></iframe>
-  <canvas id="canvasface" width="800" height="600" style="border:2px solid #000000; background-color: #FFF399; text-decoration: none;" onmousemove ="drawCoords(event)" >Stop using NETSCAPE NAVIGATOR you pleb</canvas>
+    <iframe id="yoface" width="100%" height="100%" style="position:fixed;" src="login"></iframe>
+    <iframe id="endgamefantasy" width="100%" height="100%" src="endgame"></iframe>
+    <iframe id="pregamefantasy" width="100%" height="100%" style="display: block;" src="pregame"></iframe>
+    <canvas id="canvasface" width="800" height="600" style="border:2px solid #000000; background-color: #FFF399; text-decoration: none;" onmousemove="drawCoords(event)">Stop using NETSCAPE NAVIGATOR you pleb</canvas>
 
-<img id="kappa" src="http://dota2.ru/forum/data/attachments/25/25375-4b97e8b499a874db9c3d58f82c27a4bf.jpg">
+    <img id="kappa" src="http://dota2.ru/forum/data/attachments/25/25375-4b97e8b499a874db9c3d58f82c27a4bf.jpg">
 
-  <script src="global.js"></script>
-  <script>
-  var socket = io();
-  
-  var gameOn= false;
-  $("#endgamefantasy").hide();
-  $("#pregamefantasy").hide();
-  socket.on('gamepreupdate',function(game) {
-      $("#endgamefantasy").contents().find("#Timer").text(game.timeTillNext);
-      console.log("TIME IS COMMING");
-  });
-  socket.on('gamelobby',function(game) {
-      $("#pregamefantasy").show();
-      console.log("MYFACE IS MINE");
-  });
-  $("#yoface").load(function() {$("#yoface").contents().find('#startButton').click(function() {
-		//alert("Go Blub Yourself Blud");
-		var aliass=$("#yoface").contents().find('#playerNameInput').val();
-		var roomba=$("#yoface").contents().find('#roomNumberInput').val();
-		if(aliass=="")
-		{ 
-			socket.emit('logincomplete',"Mr. Rosier",roomba);
-			
-		}
-		else
-		{
-			socket.emit('logincomplete',aliass,roomba);
-		}
-		$("#yoface").hide();
-		Revolver.init();
-		gameOn = true;
-    });});
-	function setCookie(cname,cvalue,exdays) {
-		var d = new Date();
-		d.setTime(d.getTime() + (exdays*24*60*60*1000));
-		var expires = "expires=" + d.toGMTString();
-		document.cookie = cname+"="+cvalue+"; "+expires;
-	}
+    <script src="global.js"></script>
+    <script>
+        var socket = io();
 
-	function getCookie(cname) {
-		var name = cname + "=";
-		var ca = document.cookie.split(';');
-		for(var i=0; i<ca.length; i++) {
-			var c = ca[i];
-			while (c.charAt(0)==' ') c = c.substring(1);
-			if (c.indexOf(name) == 0) {
-				return c.substring(name.length, c.length);
-			}
-		}
-		return "";
-	}
-	
-	
-    var client_user;
-    socket.on('user handshake', function(id,key){
-      client_user = id;
-	  
-	  if(getCookie("userid")==key)
-	  {
-	    $("#yoface").hide();
-	  }
-	  else
-	  {
-	    setCookie("userid",key,1/24);
-		
-	  }
-	  
-    // var username = prompt("Enter name now: ", "Anonmousss");
-    // while( /[^a-zA-Z0-9]/.test( username ) ) {
-    //       alert('Input is not alphanumeric');
-    //       username = prompt("Enter name now: ", "Anonmousss");
-    //    }
-    // socket.emit('alias',username);
-    });
-      //WIN GAME SCENARIO
-     
-      socket.on('endgame', function(userWhoWon) {
-        //Here I need to show my donger
-        $("#endgamefantasy").show();
-        $("#endgamefantasy").contents().find("#GPlayer").text(userWhoWon.nickname);
-      });
+        var gameOn = false;
+        $("#endgamefantasy").hide();
+        $("#pregamefantasy").hide();
+        socket.on('gamepreupdate', function(game) {
+            $("#endgamefantasy").contents().find("#Timer").text(game.timeTillNext);
+            console.log("TIME IS COMMING");
+        });
+        socket.on('gamelobby', function(game) {
+            $("#pregamefantasy").show();
+            console.log("MYFACE IS MINE");
+        });
+        $("#yoface").load(function() {
+            $("#yoface").contents().find('#startButton').click(function() {
+                //alert("Go Blub Yourself Blud");
+                var aliass = $("#yoface").contents().find('#playerNameInput').val();
+                var roomba = $("#yoface").contents().find('#roomNumberInput').val();
+                if (aliass == "") {
+                    socket.emit('logincomplete', "Mr. Rosier", roomba);
+
+                } else {
+                    socket.emit('logincomplete', aliass, roomba);
+                }
+                $("#yoface").hide();
+                Revolver.init();
+                gameOn = true;
+            });
+        });
+
+        function setCookie(cname, cvalue, exdays) {
+            var d = new Date();
+            d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+            var expires = "expires=" + d.toGMTString();
+            document.cookie = cname + "=" + cvalue + "; " + expires;
+        }
+
+        function getCookie(cname) {
+            var name = cname + "=";
+            var ca = document.cookie.split(';');
+            for (var i = 0; i < ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) == ' ') c = c.substring(1);
+                if (c.indexOf(name) == 0) {
+                    return c.substring(name.length, c.length);
+                }
+            }
+            return "";
+        }
 
 
-    socket.on('actionHappened', function(msg) {
-        $('#killLog').append("<li>" + msg + "</li>");
-      setTimeout(function(){$('#killLog').children().first().next().remove();},5000);
-    });
-    socket.on('updateusers', function(users){
-      $('#playertable').empty();
-      //Stuffs
-      $('#playertable').append("<tr>  <th>Player</th>  <th>Score</th>  <th>Time</th>  </tr>");
-      for(var i = 0;i<users.length;i++)
-      {
-          $('#playertable').append("<tr><td>" + (users[i].nickname + "            ") + "</td><td> " + users[i].points + "</td><td>" + users[i].pointTime + "</td></tr>");
-        
-      }
-	  var id = users[0].id;
-	  for(var i = 0;i<ids.length;i++)
-	  {
-	      if(ids[i].id == id)
-		  {
-		      ids[i].pants=true;
-		  }
-		  else
-		  {
-		      ids[i].pants=false;
-		  }
-	  }
-    });
-	var terrain=[];
-	socket.on('gamepresets',function(game,allTerrain){
-	    terrain=[];
-	
-	    for(var i = allTerrain.length-1;i>=0;i--)
-		{
-		    terrain.push(new Revolver.Terrain(allTerrain[i].location.x,allTerrain[i].location.y));
-		}
-		$("#endgamefantasy").hide();
-  $("#pregamefantasy").hide();
-	
-	
-	});
-    var ids = [];
-	var collisions = [];
+        var client_user;
+        socket.on('user handshake', function(id, key) {
+            client_user = id;
 
-    socket.on('data', function(allPlayers,allBullets,allCollisions){//these paramerters are arrays []
-      <!-- $('#messages').append($('<li>').text(msg)); -->
-      //allPlayers.x .. .y
+            if (getCookie("userid") == key) {
+                $("#yoface").hide();
+            } else {
+                setCookie("userid", key, 1 / 24);
 
-      //allPlayers[0].x
-      if(!gameOn)
-        return;
-      Revolver.Draw.clear();
-	  
-	  for(var i = 0 ; i<terrain.length;i++)
-	  {
-	    terrain[i].render();
-	  }
-	  for (var i = 0;i<allCollisions.length;i++)//made by Andrew Tan
-	  {
-	    collisions.push(new Revolver.Collision(allCollisions[i].location.x,allCollisions[i].location.y,allCollisions[i].id==client_user,allCollisions[i].isBoB));
-		
-	  }
-	  for(var i = collisions.length-1;i>=0;i--)//<(^_^)>\\
-	  {
-	    collisions[i].update();
-		collisions[i].render();
-	    if(collisions[i].finishedRender) {
-		  collisions.splice(i,i+1);
-		}
-		
-	  }
-      for (var i = 0; i < allPlayers.length; i++)
-      {
-        var id = allPlayers[i].id; //Now they have angles
-        var inids = false;
-        var x = allPlayers[i].location.x;
-        var y = allPlayers[i].location.y;
-        var angle = allPlayers[i].angle;
-            var shoot = allPlayers[i].shoot;
-        for(var ii = 0; ii < ids.length; ii++)
-        {
-                //Check if user is self
-                if (client_user == "" + ids[ii].id){
-                    ids[ii].imSpecial();
+            }
+
+            // var username = prompt("Enter name now: ", "Anonmousss");
+            // while( /[^a-zA-Z0-9]/.test( username ) ) {
+            //       alert('Input is not alphanumeric');
+            //       username = prompt("Enter name now: ", "Anonmousss");
+            //    }
+            // socket.emit('alias',username);
+        });
+        //WIN GAME SCENARIO
+
+        socket.on('endgame', function(userWhoWon) {
+            //Here I need to show my donger
+            $("#endgamefantasy").show();
+            $("#endgamefantasy").contents().find("#GPlayer").text(userWhoWon.nickname);
+        });
+
+
+        socket.on('actionHappened', function(msg) {
+            $('#killLog').append("<li>" + msg + "</li>");
+            setTimeout(function() {
+                $('#killLog').children().first().next().remove();
+            }, 5000);
+        });
+        socket.on('updateusers', function(users) {
+            $('#playertable').empty();
+            //Stuffs
+            $('#playertable').append("<tr>  <th>Player</th>  <th>Score</th>  <th>Time</th>  </tr>");
+            for (var i = 0; i < users.length; i++) {
+                $('#playertable').append("<tr><td>" + (users[i].nickname + "            ") + "</td><td> " + users[i].points + "</td><td>" + users[i].pointTime + "</td></tr>");
+
+            }
+            var id = users[0].id;
+            for (var i = 0; i < ids.length; i++) {
+                if (ids[i].id == id) {
+                    ids[i].pants = true;
+                } else {
+                    ids[i].pants = false;
+                }
+            }
+        });
+        var terrain = [];
+        socket.on('gamepresets', function(game, allTerrain) {
+            terrain = [];
+
+            for (var i = allTerrain.length - 1; i >= 0; i--) {
+                terrain.push(new Revolver.Terrain(allTerrain[i].location.x, allTerrain[i].location.y));
+            }
+            $("#endgamefantasy").hide();
+            $("#pregamefantasy").hide();
+
+
+        });
+        var ids = [];
+        var collisions = [];
+
+        socket.on('data', function(allPlayers, allBullets, allCollisions) { //these paramerters are arrays []
+            <!-- $('#messages').append($('<li>').text(msg)); -->
+            //allPlayers.x .. .y
+
+            //allPlayers[0].x
+            if (!gameOn)
+                return;
+            Revolver.Draw.clear();
+
+            for (var i = 0; i < terrain.length; i++) {
+                terrain[i].render();
+            }
+            for (var i = 0; i < allCollisions.length; i++) //made by Andrew Tan
+            {
+                collisions.push(new Revolver.Collision(allCollisions[i].location.x, allCollisions[i].location.y, allCollisions[i].id == client_user, allCollisions[i].isBoB));
+
+            }
+            for (var i = collisions.length - 1; i >= 0; i--) //<(^_^)>\\
+            {
+                collisions[i].update();
+                collisions[i].render();
+                if (collisions[i].finishedRender) {
+                    collisions.splice(i, i + 1);
                 }
 
-          if (id == "" + ids[ii].id){
-            inids = true;
-            ids[ii].update(x,y,angle,shoot,allPlayers[i].nickname);
-          }
+            }
+            for (var i = 0; i < allPlayers.length; i++) {
+                var id = allPlayers[i].id; //Now they have angles
+                var inids = false;
+                var x = allPlayers[i].location.x;
+                var y = allPlayers[i].location.y;
+                var angle = allPlayers[i].angle;
+                var shoot = allPlayers[i].shoot;
+                for (var ii = 0; ii < ids.length; ii++) {
+                    //Check if user is self
+                    if (client_user == "" + ids[ii].id) {
+                        ids[ii].imSpecial();
+                    }
+
+                    if (id == "" + ids[ii].id) {
+                        inids = true;
+                        ids[ii].update(x, y, angle, shoot, allPlayers[i].nickname);
+                    }
+                }
+                if (inids == false) {
+                    var newChar = new Revolver.Character();
+                    newChar.init(id, x, y, angle, shoot, allPlayers[i].nickname);
+                    ids.push(newChar);
+                    //var img = document.createElement("img");
+                    //img.src = "http://dota2.ru/forum/data/attachments/25/25375-4b97e8b499a874db9c3d58f82c27a4bf.jpg";
+                    //img.id = "kappa"+id;
+                    //document.getElementById('body').appendChild(img);
+                }
+
+                //var img = document.getElementById("kappa" + id);
+                //cvs.drawImage(img,x,y);
+                //NOT DONE
+            }
+            for (var i = 0; i < allBullets.length; i++) {
+                Revolver.Bullet(allBullets[i].location.x, allBullets[i].location.y, allBullets[i].id == client_user);
+            }
+
+            //Revolver.loop();
+        });
+
+        //For latency
+        var startTime = Date.now();
+        setInterval(function() {
+            startTime = Date.now();
+            socket.emit('ping');
+            socket.emit('requestUsers');
+        }, 4000);
+
+        socket.on('pong', function() {
+            latency = Date.now() - startTime;
+            console.log("MY PING: " + latency);
+        });
+
+        // var userX = 0;
+        // var userY = 0;
+        var didChange = false;
+
+        function drawCoords(event) {
+            var rect = document.getElementById('canvasface').getBoundingClientRect();
+            Revolver.Character.goalX = event.clientX - rect.left;
+            Revolver.Character.goalY = event.clientY - rect.top;
+            didChange = true;
         }
-        if (inids == false)
-        {
-          var newChar = new Revolver.Character();
-          newChar.init(id,x,y,angle,shoot,allPlayers[i].nickname);
-          ids.push(newChar);
-          //var img = document.createElement("img");
-          //img.src = "http://dota2.ru/forum/data/attachments/25/25375-4b97e8b499a874db9c3d58f82c27a4bf.jpg";
-          //img.id = "kappa"+id;
-          //document.getElementById('body').appendChild(img);
-        }
+        setInterval(function() {
+            if (didChange) {
+                socket.emit('location', {
+                    x: Revolver.Character.goalX,
+                    y: Revolver.Character.goalY
+                });
+                // console.log(Revolver.Character.goalX + " " + Revolver.Character.goalY);
+                didChange = false;
+            }
+        }, 100);
+    </script>
+</body>
 
-        //var img = document.getElementById("kappa" + id);
-        //cvs.drawImage(img,x,y);
-        //NOT DONE
-      }
-      for (var i = 0; i < allBullets.length; i++)
-      {
-        Revolver.Bullet(allBullets[i].location.x,allBullets[i].location.y,allBullets[i].id == client_user);
-      }
-	  
-      //Revolver.loop();
-    });
-      
-      //For latency
-    var startTime = Date.now();
-    setInterval(function() {
-        startTime = Date.now();
-      socket.emit('ping');
-      socket.emit('requestUsers');
-    }, 4000);
-
-    socket.on('pong', function() {
-        latency = Date.now() - startTime;
-      console.log("MY PING: " + latency);
-    });
-
-    // var userX = 0;
-    // var userY = 0;
-    var didChange = false;
-
-    function drawCoords(event){
-        var rect = document.getElementById('canvasface').getBoundingClientRect();
-      Revolver.Character.goalX = event.clientX - rect.left;
-      Revolver.Character.goalY = event.clientY - rect.top;
-      didChange = true;
-    }
-    setInterval(function() {
-      if(didChange) {
-        socket.emit('location', {x:Revolver.Character.goalX,y:Revolver.Character.goalY});
-        // console.log(Revolver.Character.goalX + " " + Revolver.Character.goalY);
-        didChange = false;
-      }
-    }, 100);
-  
-
-
-  </script>
-  </body>
 </html>

@@ -5,34 +5,31 @@ canvas {
     margin-right: 0;
     display: inline-block;
 }
-
 #scoreboard {
-	border-style: solid;
-	border-width: 3px;
-	border-color: #000000;
+    border-style: solid;
+    border-width: 3px;
+    border-color: #000000;
     background: #eeeeee;
     padding: 12px;
     width: 300px;
     height: 602px;
 }
-
 #scoreboard ul {
-	list-style-type:none; 
+    list-style-type: none;
     font-size: 1.2em;
-    
 }
-
 #killmeplz {
     border-style: solid;
-	border-width: 1px;
-	border-color: #000000;
+    border-width: 1px;
+    border-color: #000000;
     background: #eeeeee;
-	padding: 12px;
+    padding: 12px;
     width: 300px;
     height: 604px;
 }
 #playertable {
-    text-align: center;;
+    text-align: center;
+    ;
 }
 #endgamefantasy {
     padding-left: 0;
@@ -40,5 +37,5 @@ canvas {
     margin-left: auto;
     margin-right: auto;
     display: block;
-    position:fixed;
+    position: fixed;
 }
