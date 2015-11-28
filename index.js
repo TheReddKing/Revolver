@@ -8,7 +8,9 @@ app.get('/', function(req, res){
 });
 app.get('/global.js', function(req, res){
    res.sendFile(__dirname + '/global.js');
- // res.sendFile(__dirname + '/plzDoJudge.html');
+});
+app.get('/css.css', function(req, res){
+   res.sendFile(__dirname + '/css.css');
 });
 
 
@@ -44,8 +46,8 @@ io.on('connection', function(socket){
     	console.log(x + " " + y + "DELAY " + (user.angle-angle));
         user.canShoot = false;
         setTimeout(function() {
-            user.canShoot = true;
-        },500);
+            user.canShoot = true;  //Reload Time
+        },1000);
     	bullets.push(bullet);
      }
   });
@@ -63,12 +65,12 @@ io.on('connection', function(socket){
   });
 });
 
-function collides(a,b)
+function collides(a,b,ar,br)
 {
     var distance_squared = ( ((a.location.x - b.location.x) * (a.location.x - b.location.x)) +
                             ((a.location.y - b.location.y) * (a.location.y - b.location.y)));
 
-    var radii_squared = (20 + 10) * (20 + 10);
+    var radii_squared = (ar + br) * (ar + br);
     if (distance_squared < radii_squared) {
         return true;
     } else {
@@ -86,9 +88,10 @@ setInterval(function(){
 	{
 	    for(var u = users.length-1;u>=0;u--)
 		{
-		    if(collides(users[u],bullets[b]))
+		    if(collides(users[u],bullets[b],20,10))
 			{
-			    if(bullets[u].id!=users[u].id){
+			    if(bullets[b].id !=users[u].id)
+				{
 				    console.log("COLLISION");
           		    bullets.splice(b,b+1);
                     break;
@@ -97,7 +100,31 @@ setInterval(function(){
 			}
 		}
 	}
-
+	
+	for(var b =bullets.length-1;b>0;b--)
+	{
+		for(var b2 = b-1;b2>=0;b2--)
+		{
+		    
+		    if(collides(bullets[b],bullets[b2],10,10))
+			{
+			    console.log("BULLET ON BULLET COLLISION");
+				bullets.splice(b,b+1);
+				bullets.splice(b2,b2+1);
+				break;
+			}
+		}
+		if(b > bullets.length) {
+		    b--;
+		}
+	}
+    for(var b =bullets.length-1;b>=0;b--)
+	{
+	    if(bullets[b].location.x<-20||bullets[b].location.x>1020||bullets[b].location.y<-20||bullets[b].location.y>620)
+		{
+		    bullets.splice(b,b+1);
+		}
+	}
     //User movement ---------------------------------------------------------->
 	for(var i=0;i<users.length;i++) {
 		var u = users[i];
@@ -135,8 +162,8 @@ setInterval(function(){
 	for(var i=0;i<bullets.length;i++)
 	{
 	    var b=bullets[i];
-		b.location.x+=Math.cos(b.angle) * 10;
-		b.location.y+=Math.sin(b.angle) * 10;
+		b.location.x+=Math.cos(b.angle) * 15;//bullet speed
+		b.location.y+=Math.sin(b.angle) * 15;
 		allBullets.push({location:b.location,id:b.id});
 	}
 

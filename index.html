@@ -12,6 +12,7 @@
       #messages li { padding: 5px 10px; }
       #messages li:nth-child(odd) { background: #eee; }
     </style>
+    <link rel="stylesheet" type="text/css" href="css.css">
 	<script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
 	<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
   </head>
@@ -23,7 +24,15 @@
 
 	<canvas id="canvasface" width="1000" height="600" style="border:1px solid #000000; background-color: #FFF399" onmousemove ="drawCoords(event)" >Stop using IE you pleb</canvas>
 
+<div style="float:right">
+<h2 id="roomnum">Room 10000</h2>
 
+<ul id="players">
+  <h3>Players</h3>
+  <li>HI</li>
+</ul>
+
+</div>
 <img id="kappa" src="http://dota2.ru/forum/data/attachments/25/25375-4b97e8b499a874db9c3d58f82c27a4bf.jpg">
 
   <script src="global.js"></script>
@@ -109,8 +118,9 @@
 	var didChange = false;
 
 	function drawCoords(event){
-		Revolver.Character.goalX = event.clientX;
-		Revolver.Character.goalY = event.clientY;
+    var rect = document.getElementById('canvasface').getBoundingClientRect();
+		Revolver.Character.goalX = event.clientX - rect.left;
+		Revolver.Character.goalY = event.clientY - rect.top;
 		didChange = true;
 	}
 	setInterval(function() {
