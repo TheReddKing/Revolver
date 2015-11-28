@@ -9,6 +9,8 @@ window.requestAnimFrame = (function(){
           };
 })();
 
+
+
 var Revolver = {
 
     canvas:null,
@@ -22,10 +24,14 @@ var Revolver = {
 		// Revolver.canvas.height=1000;
       Revolver.canvas=document.getElementById("canvasface");
       Revolver.ctx=Revolver.canvas.getContext("2d");
+	Revolver.canvas.oncontextmenu = function() {
+			 return false;
+		}
 
 
 		// Revolver.loop();
 	},
+
     // update:function(){
 	   // ocelot.update();
 	// },
@@ -42,6 +48,7 @@ var Revolver = {
 	// },
 
 };
+
 Revolver.collides=function(a,b){
 
 
@@ -145,9 +152,9 @@ Revolver.Ocelot = function(){
 };
 Revolver.Bullet = function(x,y,isSelf){
 	this.r = 10;
-    
+
     if(isSelf) {
-	    
+
         color = "#663399"
     }
 	else{
@@ -155,7 +162,48 @@ Revolver.Bullet = function(x,y,isSelf){
 	}
 	Revolver.Draw.circle(x,y,this.r,color);
 };
-Revolver.click = function() {
+Revolver.leftclick = function() {
 	socket.emit('bullet', 0);
 }
-window.addEventListener('mousedown',Revolver.click,false);
+Revolver.rightclick= function(){
+    
+}
+Revolver.action = function(){
+    $('#canvasface').mousedown(function(event) {
+		switch (event.which) {
+			case 1:
+				Revolver.leftclick();
+				console.log("left clickk");
+				break;
+			case 2:
+				console.log('Middle Mouse button pressed.');
+				break;
+			case 3:
+				console.log('Right Mouse button pressed.');
+                socket.emit('rightclick',true);
+				break;
+			default:
+			    alert("You're mouse isn't welcome on this server. We don't serve yer kind here. GETOUTGETOUTGETOUTGETOUTGETOUTGETOUTGETOUTGETOUTGETOUT");
+				break;
+		}
+    });
+    $('#canvasface').mouseup(function(event) {
+        switch (event.which) {
+            case 1:
+
+                console.log("left clickk released");
+                break;
+            case 2:
+                console.log('Middle Mouse button releades.');
+                break;
+            case 3:
+                console.log('Right Mouse button released.');
+                socket.emit('rightclick',false);
+                break;
+            default:
+                alert("You're mouse isn't welcome on this server. We don't serve yer kind here. GETOUTGETOUTGETOUTGETOUTGETOUTGETOUTGETOUTGETOUTGETOUT");
+                break;
+        }
+    });
+}
+window.addEventListener('load',Revolver.action,false);

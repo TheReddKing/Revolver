@@ -1,0 +1,56 @@
+<!-- https://github.com/huytd/agar.io-clone/blob/master/src/client/index.html -->
+<!-- https://github.com/huytd/agar.io-clone/blob/master/src/client/css/main.css -->
+<!doctype html>
+<html lang="en">
+<head>
+	<title>Revolver</title>
+</head>
+<body>
+	<div id="StartMenuWrapper">
+		<div id ="startmenu" style = "text-align: center">
+			<p id="title">Revolver</p>
+			<p id="subtitle">Where every shot is a 360 noscope!</p>
+			<form action="loginPOST" method="post" enctype="application/x-www-form-urlencoded">
+				<input type="text" name="UserName" tabindex="0" autofocus placeholder="Enter username here" id="playerNameInput" maxlength="16">
+				<br/>
+				<b class="input-error" style= "font-size: 10px; font-weight: 500; color: #999999;";>(Username must be alphanumeric)</b>
+				<br/>
+				<input type="text" name="RoomNumber" placeholder="Enter room number here" id="roomNumberInput" maxlength="5">
+				<br/>
+				<button id="startButton" value="submit">Play</button>
+			</form>
+	</div>
+</body>
+
+<style>
+* {
+font-family: sans-serif;
+font size: 14px;
+}
+
+html, body {background-color: #eeeeee;}
+
+#StartMenuWrapper {
+position:fixed;
+top:50%;
+left:50%;
+width: 400px;
+height:200px;
+margin-top: -100px;
+margin-left: -200px;
+border: 1px solid #000;
+background-color: #fff;
+}
+
+#title {
+font-size: 32px;
+font-weight: 900;
+margin-top: 0px;
+margin-bottom: -10px;
+}
+
+#roomNumberInput {
+margin-top: 20px;
+}
+
+</style>
