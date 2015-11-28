@@ -50,7 +50,7 @@
 </ul>
 </div>
   <iframe id="yoface" width= "100%" height = "100%" style="position:fixed;" src="login"></iframe>
-  <iframe id="endgamefantasy" width= "400px" height = "300px" src="endgame"></iframe>
+  <iframe id="endgamefantasy"width= "100%" height = "100%" src="endgame"></iframe>
   <canvas id="canvasface" width="1000" height="600" style="border:1px solid #000000; background-color: #FFF399;" onmousemove ="drawCoords(event)" >Stop using NETSCAPE NAVIGATOR you pleb</canvas>
 
 <img id="kappa" src="http://dota2.ru/forum/data/attachments/25/25375-4b97e8b499a874db9c3d58f82c27a4bf.jpg">
@@ -58,28 +58,65 @@
   <script src="global.js"></script>
   <script>
   var socket = io();
+  
   var gameOn= false;
   $("#endgamefantasy").hide();
-
+  socket.on('gamepreupdate',function(game) {
+      $("#endgamefantasy").contents().find("#Timer").text(game.timeTillNext);
+      console.log("TIME IS COMMING")
+  });
   $("#yoface").load(function() {$("#yoface").contents().find('#startButton').click(function() {
-    //alert("Go Blub Yourself Blud");
-    var aliass=$("#yoface").contents().find('#playerNameInput').val();
-    if(aliass=="")
-    { 
-        socket.emit('alias',"Mr. Rosier");
-    }
-    else
-    {
-        socket.emit('alias',aliass);
-    }
-    $("#yoface").hide();
-    Revolver.init();
-    gameOn = true;
-  });});
+		//alert("Go Blub Yourself Blud");
+		var aliass=$("#yoface").contents().find('#playerNameInput').val();
+		var roomba=$("#yoface").contents().find('#roomNumberInput').val();
+		if(aliass=="")
+		{ 
+			socket.emit('logincomplete',"Mr. Rosier",roomba);
+			
+		}
+		else
+		{
+			socket.emit('logincomplete',aliass,roomba);
+		}
+		$("#yoface").hide();
+		Revolver.init();
+		gameOn = true;
+    });});
+	function setCookie(cname,cvalue,exdays) {
+		var d = new Date();
+		d.setTime(d.getTime() + (exdays*24*60*60*1000));
+		var expires = "expires=" + d.toGMTString();
+		document.cookie = cname+"="+cvalue+"; "+expires;
+	}
 
+	function getCookie(cname) {
+		var name = cname + "=";
+		var ca = document.cookie.split(';');
+		for(var i=0; i<ca.length; i++) {
+			var c = ca[i];
+			while (c.charAt(0)==' ') c = c.substring(1);
+			if (c.indexOf(name) == 0) {
+				return c.substring(name.length, c.length);
+			}
+		}
+		return "";
+	}
+	
+	
     var client_user;
-      socket.on('user handshake', function(handshake){
-    client_user = handshake;
+    socket.on('user handshake', function(id,key){
+      client_user = id;
+	  
+	  if(getCookie("userid")==key)
+	  {
+	    $("#yoface").hide();
+	  }
+	  else
+	  {
+	    setCookie("userid",key,1/24);
+		
+	  }
+	  ;
     // var username = prompt("Enter name now: ", "Anonmousss");
     // while( /[^a-zA-Z0-9]/.test( username ) ) {
     //       alert('Input is not alphanumeric');
@@ -92,7 +129,7 @@
       socket.on('endgame', function(userWhoWon) {
         //Here I need to show my donger
         $("#endgamefantasy").show();
-        $("#endgamefantasy").contents().find("#GPlayer").text = userWhoWon.nickname;
+        $("#endgamefantasy").contents().find("#GPlayer").text(userWhoWon.nickname);
       });
 
 
@@ -100,7 +137,7 @@
         $('#killLog').append("<li>" + msg + "</li>");
       setTimeout(function(){$('#killLog').children().first().next().remove();},5000);
     });
-    socket.on('requestUsers', function(users){
+    socket.on('updateusers', function(users){
       $('#playertable').empty();
       //Stuffs
       $('#playertable').append("<tr>  <th>Player</th>  <th>Score</th>  <th>Time</th>  </tr>");
@@ -149,7 +186,7 @@
 	  }
 	  for (var i = 0;i<allCollisions.length;i++)//made by Andrew Tan
 	  {
-	    collisions.push(new Revolver.Collision(allCollisions[i].location.x,allCollisions[i].location.y,allCollisions[i].id==client_user.id,allCollisions[i].isBoB));
+	    collisions.push(new Revolver.Collision(allCollisions[i].location.x,allCollisions[i].location.y,allCollisions[i].id==client_user,allCollisions[i].isBoB));
 		
 	  }
 	  for(var i = collisions.length-1;i>=0;i--)//<(^_^)>\\
@@ -172,7 +209,7 @@
         for(var ii = 0; ii < ids.length; ii++)
         {
                 //Check if user is self
-                if (client_user.id == "" + ids[ii].id){
+                if (client_user == "" + ids[ii].id){
                     ids[ii].imSpecial();
                 }
 
@@ -198,7 +235,7 @@
       }
       for (var i = 0; i < allBullets.length; i++)
       {
-        Revolver.Bullet(allBullets[i].location.x,allBullets[i].location.y,allBullets[i].id == client_user.id);
+        Revolver.Bullet(allBullets[i].location.x,allBullets[i].location.y,allBullets[i].id == client_user);
       }
 	  
       //Revolver.loop();
