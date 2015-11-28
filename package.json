@@ -1,7 +1,7 @@
 {
-    "name": "circles",
-    "version": "0.0.1",
-    "description": "my first socket.io app",
+    "name": "Revolver",
+    "version": "0.0.4",
+    "description": "Click based mania",
     "dependencies": {
         "body-parser": "^1.14.1",
         "express": "^4.13.3",
