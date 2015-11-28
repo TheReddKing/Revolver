@@ -1,0 +1,128 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Revolver</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages li { padding: 5px 10px; }
+      #messages li:nth-child(odd) { background: #eee; }
+    </style>
+	<script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+	<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+  </head>
+<body id='body' onload="Revolver.init()">
+    <!-- <ul id="messages"></ul>
+    <form action="">
+      <input id="m" autocomplete="off" /><button>Send</button>
+    </form> -->
+
+	<canvas id="canvasface" width="1000" height="600" style="border:1px solid #000000; background-color: #FFF399" onmousemove ="drawCoords(event)" >Stop using IE you pleb</canvas>
+
+
+<img id="kappa" src="http://dota2.ru/forum/data/attachments/25/25375-4b97e8b499a874db9c3d58f82c27a4bf.jpg">
+
+  <script src="global.js"></script>
+	<script>
+	var socket = io();
+	$('form').submit(function(){
+		socket.emit('chat message', $('#m').val());
+		$('#m').val('');
+		return false;
+	});
+
+  var user;
+  socket.on('user handshake', function(handshake){
+	user = handshake;
+	alert("HI " + handshake["key"]);
+
+  });
+
+  var ids = [];
+  socket.on('data', function(allPlayers,allBullets){
+	<!-- $('#messages').append($('<li>').text(msg)); -->
+	//allPlayers.x .. .y
+
+	//allPlayers[0].x
+	Revolver.Draw.clear();
+	for (var i = 0; i < allPlayers.length; i++)
+	{
+
+		var id = allPlayers[i].id; //Now they have angles
+		var inids = false;
+		var x = allPlayers[i].location.x;
+		var y = allPlayers[i].location.y;
+		var angle = allPlayers[i].angle;
+        var shoot = allPlayers[i].shoot;
+		for(var ii = 0; ii < ids.length; ii++)
+		{
+            //Check if user is self
+            if (user.id == "" + ids[ii].id){
+                ids[ii].imSpecial();
+            }
+
+			if (id == "" + ids[ii].id){
+				inids = true;
+				ids[ii].update(x,y,angle,shoot);
+			}
+		}
+		if (inids == false)
+		{
+			var newChar = new Revolver.Character();
+			newChar.init(id,x,y,angle,shoot);
+			ids.push(newChar);
+			//var img = document.createElement("img");
+			//img.src = "http://dota2.ru/forum/data/attachments/25/25375-4b97e8b499a874db9c3d58f82c27a4bf.jpg";
+			//img.id = "kappa"+id;
+			//document.getElementById('body').appendChild(img);
+		}
+
+		//var img = document.getElementById("kappa" + id);
+		//cvs.drawImage(img,x,y);
+		//NOT DONE
+	}
+	for (var i = 0; i < allBullets.length; i++)
+	{
+		Revolver.Bullet(allBullets[i].location.x,allBullets[i].location.y,allBullets[i].id == user.id);
+	}
+	//Revolver.loop();
+  });
+
+  //For latency
+	var startTime = Date.now();
+	setInterval(function() {
+	  startTime = Date.now();
+	  socket.emit('ping');
+	}, 6000);
+
+	socket.on('pong', function() {
+	  latency = Date.now() - startTime;
+	  console.log("MY PING: " + latency);
+	});
+
+	// var userX = 0;
+	// var userY = 0;
+	var didChange = false;
+
+	function drawCoords(event){
+		Revolver.Character.goalX = event.clientX;
+		Revolver.Character.goalY = event.clientY;
+		didChange = true;
+	}
+	setInterval(function() {
+		if(didChange) {
+			socket.emit('location', {x:Revolver.Character.goalX,y:Revolver.Character.goalY});
+			console.log(Revolver.Character.goalX + " " + Revolver.Character.goalY);
+			didChange = false;
+		}
+	}, 100);
+
+
+
+	</script>
+  </body>
+</html>

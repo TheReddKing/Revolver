@@ -1,0 +1,5 @@
+Install node.js. It ends up in "C:\Program Files (x86)\nodejs."
+Extract the socket.io zip file LearnBoost-socket.io-0.9.5-18-g3b9715e.zip into "C:\Program Files (x86)\nodejs\node_modules\npm\Socket.IO"
+Open a DOS window (cmd) running as Administrator and change directory to "C:\Program Files (x86)\nodejs\node_modules\npm."
+In that DOS window, run "npm install Socket.IO"
+The new socket.io module is located in "C:\Program Files (x86)\nodejs\node_modules\npm\node_modules\socket.io"

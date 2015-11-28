@@ -1,0 +1,10 @@
+{
+  "name": "circles",
+  "version": "0.0.1",
+  "description": "my first socket.io app",
+  "dependencies": {
+    "express": "^4.13.3",
+    "ioredis": "^1.8.0",
+    "socket.io": "^1.3.6"
+  }
+}

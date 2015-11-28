@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages li { padding: 5px 10px; }
+      #messages li:nth-child(odd) { background: #eee; }
+    </style>
+	<script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+	<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+  </head>
+<body>
+    <!-- <ul id="messages"></ul>
+    <form action="">
+      <input id="m" autocomplete="off" /><button>Send</button>
+    </form> -->
+	
+	<canvas id="canvasface" width="500" height="500" style="border:1px solid #000000;" onmousemove ="drawCoords(event)" >Stop using IE you pleb</canvas>
+
+
+<img id="kappa" src="http://dota2.ru/forum/data/attachments/25/25375-4b97e8b499a874db9c3d58f82c27a4bf.jpg">
+
+	<script>
+	
+	var socket = io();
+	$('form').submit(function(){
+		socket.emit('chat message', $('#m').val());
+		$('#m').val('');
+		return false;
+	});
+	
+  var user;
+  socket.on('user handshake', function(handshake){
+	user = handshake;
+	alert("HI " + handshake["key"]);
+  });
+  
+  socket.on('data', function(allPlayers){
+	console.log(allPlayers);
+	/* $('#messages').append($('<li>').text(msg));
+	var x = event.clientX;
+		var y = event.clientY;
+		var canvas = document.getElementById("canvasface");
+		var cvs = canvas.getContext("2d");
+		cvs.clearRect(0, 0, canvas.width, canvas.height);
+		var img = document.getElementById("kappa");
+		cvs.drawImage(img,x,y); */
+		//NOT DONE
+  });
+  
+  //For latency
+	var startTime = Date.now();
+	setInterval(function() {
+	  startTime = Date.now();
+	  socket.emit('ping');
+	}, 6000);
+
+	socket.on('pong', function() {
+	  latency = Date.now() - startTime;
+	  console.log("MY PING: " + latency);
+	});
+	
+	
+	var userX = 0;
+	var userY = 0;
+	
+	function drawCoords(event){
+		userX = event.clientX;
+		userY = event.clientY;
+		
+	}	
+	requestAnimFrame( sendLocation );
+	function sendLocation() {
+		socket.emit('location', {x:userX,y:userY});
+	}
+	
+
+	</script>
+	<script src= "global.js"> </script>
+  </body>
+</html>
