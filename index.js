@@ -21,8 +21,8 @@ app.get('/login',function(req, res){
 app.post('/', function(req, res){
    res.sendFile(__dirname + '/index.html');
 });
-app.get('/website', function(req, res) {
-  res.sendFile(__dirname + "/website.html");
+app.get('/endgame', function(req, res) {
+  res.sendFile(__dirname + "/endgame.html");
 })
 
 app.get('/global.js', function(req, res){
@@ -37,7 +37,8 @@ require("./login.js");
 //Game
 
 var game = {
-  gameTime:0
+  gameTime:0,
+  totalPoints:20
 };
 var users = [];
 var nextUserNum = 1;
@@ -54,14 +55,17 @@ io.on('connection', function(socket){
    bullets:new Array(20),
    points:0,
    pointTime:0,
-   rightClick:false
+   rightClick:false,
+   pants:false,
    }
 
+   var didpush = false;
   socket.emit('user handshake', user);
   socket.on('alias', function(name){
-    if(/[a-zA-Z0-9]/.test( name)) {
+    if(/[a-zA-Z0-9]/.test( name) && name.length <= 16 && !didpush) {
       user.nickname = name;
       users.push(user);
+      didpush = true;
     }
 	// if(name == "faguette")
 	// {
@@ -77,13 +81,14 @@ io.on('connection', function(socket){
 	 user.rightClick=clicked;
   });
   socket.on('disconnect', function(){
+    game.totalPoints += user.points;
 	//users.remove(user);
-  	for(var i=0;i<users.length;i++ ){
-  		if(users[i] == user) {
-  			users.splice(i,i+1);
-  			break;
-  		}
-  	}
+  	// for(var i=0;i<users.length;i++ ){
+  	// 	if(users[i] == user) {
+  	// 		users.splice(i,i+1);
+  	// 		break;
+  	// 	}
+  	// }
     console.log('user disconnected');
   });
 
@@ -93,7 +98,7 @@ io.on('connection', function(socket){
 			var spacing = 40;
 			var x=Math.cos(user.angle)*spacing + user.location.x;
 			var y=Math.sin(user.angle)*spacing + user.location.y;
-			var bullet = {id:user.id, location:{x:x, y:y},angle:user.angle+(Math.PI/2),isExistant:true};
+			var bullet = {location:{x:x, y:y},angle:user.angle+(Math.PI/2),isExistant:true};
 			// console.log(x + " " + y + "DELAY " + (user.angle-angle));
 			user.canShoot = false;
 			
@@ -196,6 +201,7 @@ setInterval(function(){
 setInterval(function(){
 	var allPlayers = [];
 	var allBullets = [];
+  var allCollisions= [];
 	// console.log(users.length);
     for(var p=0;p<users.length;p++) {
       var bullets = users[p].bullets;
@@ -210,13 +216,16 @@ setInterval(function(){
     		{
     		  if(collides(users[u],bullets[b],20,10))
     			{
-    			  if(bullets[b].id != users[u].id)
+    			  if(users[p].id != users[u].id)
     				{
     				    console.log("COLLISION");
                 bullets[b].isExistant = false;
                 users[p].points += 1;
                 if(users[u].points > 0)
                   users[u].points -= Math.round(Math.log((users[u].points)));
+				
+                  var collision = {location:{x:bullets[b].location.x,y:bullets[b].location.y}, id:users[p].id, isBoB:false};  ////////////////collision
+                  allCollisions.push(collision);
                 io.emit('actionHappened', users[p].nickname + " shot " + users[u].nickname);
               		    // bullets.splice(b,b+1);
                 break;
@@ -235,22 +244,26 @@ setInterval(function(){
             continue;
             if(!bullets[b].isExistant)
                 continue;
-			var broken = false;
+		      	var broken = false;
             //Second player's bullets
             for(var p2=p+1;p2<users.length;p2++) {
-                var bullets2 = users[p2].bullets;
+              var bullets2 = users[p2].bullets;
 
-        		for(var b2 = bullets2.length -1;b2>=0;b2--)
-        		{
+        		  for(var b2 = bullets2.length -1;b2>=0;b2--)
+        	 	  {
                 if(bullets2[b2] == null)
                   continue;
         		    if(collides(bullets[b],bullets2[b2],10,10))
         			{
-        			    console.log("BULLET ON BULLET COLLISION");
-                        bullets[b].isExistant = false;
-                        bullets2[b2].isExistant = false;
+						console.log("BULLET ON BULLET COLLISION");
+						var collision = {location:{x:bullets[b].location.x,y:bullets[b].location.y}, id:users[p].id, isBoB:true};  ////////////////collision
+						allCollisions.push(collision);
+						collision = {location:{x:bullets2[b2].location.x,y:bullets2[b2].location.y}, id:users[p2].id, isBoB:false};  ////////////////collision
+						allCollisions.push(collision);
         				// bullets.splice(b,b+1);
         				// bullets2.splice(b2,b2+1);
+            bullets[b] = null;
+            bullets2[b2] = null;
 						broken = true;
         				break;
         			}
@@ -303,7 +316,7 @@ setInterval(function(){
 		    u.angle += Math.PI/180*2;
 		}
 		else{
-		    u.angle += Math.PI/180 *8;
+		    u.angle += Math.PI/180*8;
 		}
 		var player = { id:u.id, location:u.location,angle:u.angle,shoot:u.canShoot,nickname:u.nickname};
 		// console.log("HI " + u.location.x + " " + u.location.y + " " + u.angle);
@@ -322,10 +335,10 @@ setInterval(function(){
 
     		b.location.x+=Math.cos(b.angle) * 20;//bullet speed
     		b.location.y+=Math.sin(b.angle) * 20;
-    		allBullets.push({location:b.location,id:b.id});
+    		allBullets.push({location:b.location,id:users[p].id});
     	}
     }
-	io.emit('data', allPlayers,allBullets);
+	io.emit('data', allPlayers,allBullets,allCollisions);
 }, 1000/30); //Fps sending
 
 http.listen(80, function(){

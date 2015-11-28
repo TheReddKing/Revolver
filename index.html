@@ -33,22 +33,24 @@
 
 
 <div id='scoreboard' style="position:fixed;right:0px;">
-<h2 id="roomnum">Room 10000</h2>
+<h2 id="roomnum" style='font-weight: bold;font-family: Lato, sans-serif; font-size: 16px'>Room 10000</h2>
 
 <ul id="players">
-  <h3>Players</h3>
-  <li>HI</li>
+  <table id="playertable" style="width:100%">
+
+  </table>
 </ul>
 
 </div>
-<div style="position:fixed;">
+<div id='killmeplz' style="position:fixed;">
 
 <ul id="killLog">
-  <h3 style='font-weight: bold;font-family: Lato, sans-serif;'>Kill Log</h3>
+  <h3 style='font-weight: bold;font-family: Lato, sans-serif; font-size: 16px'>Kill Log</h3>
   
 </ul>
 </div>
   <iframe id="yoface" width= "100%" height = "100%" style="position:fixed;" src="login"></iframe>
+  <iframe id="endgamefantasy" width= "400px" height = "300px" style="position:fixed;" src="endgame"></iframe>
   <canvas id="canvasface" width="1000" height="600" style="border:1px solid #000000; background-color: #FFF399;" onmousemove ="drawCoords(event)" >Stop using NETSCAPE NAVIGATOR you pleb</canvas>
 
 <img id="kappa" src="http://dota2.ru/forum/data/attachments/25/25375-4b97e8b499a874db9c3d58f82c27a4bf.jpg">
@@ -57,6 +59,8 @@
   <script>
   var socket = io();
   var gameOn= false;
+  $("#endgamefantasy").hide();
+
   $("#yoface").load(function() {$("#yoface").contents().find('#startButton').click(function() {
     //alert("Go Blub Yourself Blud");
     var aliass=$("#yoface").contents().find('#playerNameInput').val();
@@ -73,9 +77,9 @@
     gameOn = true;
   });});
 
-    var user;
+    var client_user;
       socket.on('user handshake', function(handshake){
-    user = handshake;
+    client_user = handshake;
     // var username = prompt("Enter name now: ", "Anonmousss");
     // while( /[^a-zA-Z0-9]/.test( username ) ) {
     //       alert('Input is not alphanumeric');
@@ -83,20 +87,40 @@
     //    }
     // socket.emit('alias',username);
     });
+      //WIN GAME SCENARIO
+      socket.on('gameOver', function(userWhoWon) {
+        //Here I need to show
+      });
+
     socket.on('actionHappened', function(msg) {
         $('#killLog').append("<li>" + msg + "</li>");
       setTimeout(function(){$('#killLog').children().first().next().remove();},5000);
     });
     socket.on('requestUsers', function(users){
-        $('#players').empty();
+        $('#playertable').empty();
+        //Stuffs
+        $('#playertable').append("<tr>  <th>Player</th>  <th>Score</th>  <th>Time</th>  </tr>");
         for(var i = 0;i<users.length;i++)
       {
-          $('#players').append("<li>" + (users[i].nickname + "            ").substring(0,16) + " " + users[i].points + " " + users[i].pointTime + "</li>");
+          $('#playertable').append("<tr><td>" + (users[i].nickname + "            ") + "</td><td> " + users[i].points + "</td><td>" + users[i].pointTime + "</td></tr>");
         
       }
+	  var id = users[0].id;
+	  for(var i = 0;i<ids.length;i++)
+	  {
+	      if(ids[i].id == id)
+		  {
+		      ids[i].pants=true;
+		  }
+		  else
+		  {
+		      ids[i].pants=false;
+		  }
+	  }
     });
     var ids = [];
-    socket.on('data', function(allPlayers,allBullets){
+	var collisions = [];
+    socket.on('data', function(allPlayers,allBullets,allCollisions){//these paramerters are arrays []
       <!-- $('#messages').append($('<li>').text(msg)); -->
       //allPlayers.x .. .y
 
@@ -104,6 +128,20 @@
       if(!gameOn)
         return;
       Revolver.Draw.clear();
+	  for (var i = 0;i<allCollisions.length;i++)//made by Andrew Tan
+	  {
+	    collisions.push(new Revolver.Collision(allCollisions[i].location.x,allCollisions[i].location.y,allCollisions[i].id==client_user.id,allCollisions[i].isBoB));
+		
+	  }
+	  for(var i = collisions.length-1;i>=0;i--)//<(^_^)>\\
+	  {
+	    collisions[i].update();
+		collisions[i].render();
+	    if(collisions[i].finishedRender) {
+		  collisions.splice(i,i+1);
+		}
+		
+	  }
       for (var i = 0; i < allPlayers.length; i++)
       {
         var id = allPlayers[i].id; //Now they have angles
@@ -115,7 +153,7 @@
         for(var ii = 0; ii < ids.length; ii++)
         {
                 //Check if user is self
-                if (user.id == "" + ids[ii].id){
+                if (client_user.id == "" + ids[ii].id){
                     ids[ii].imSpecial();
                 }
 
@@ -141,8 +179,9 @@
       }
       for (var i = 0; i < allBullets.length; i++)
       {
-        Revolver.Bullet(allBullets[i].location.x,allBullets[i].location.y,allBullets[i].id == user.id);
+        Revolver.Bullet(allBullets[i].location.x,allBullets[i].location.y,allBullets[i].id == client_user.id);
       }
+	  
       //Revolver.loop();
     });
       
@@ -177,7 +216,6 @@
       }
     }, 100);
   
-
 
 
   </script>

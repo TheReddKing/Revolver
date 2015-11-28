@@ -89,6 +89,9 @@ Revolver.Character = function(){
 	this.ocelot = new Revolver.Ocelot();
     this.isSpecial = false;
 	this.name = "";
+	
+	this.pants = false;
+	this.pantHeight = 0;
 	this.init = function(id, x, y, angle,canShoot,name) {
 		this.id = id;
 		this.x = x;
@@ -110,10 +113,13 @@ Revolver.Character = function(){
 	}
     this.render=function(){
 
-
 		Revolver.Draw.circle(this.x,this.y,this.r,this.isSpecial?"#003300":"#008800");
-		Revolver.Draw.text(this.name,this.x,this.y-36,15,"#2b3dc2");
+		Revolver.Draw.text(this.name,this.x,this.y-30,15,"#2b3dc2");
 		Revolver.ctx.textAlign="center";
+		if(this.pants)
+		{
+		    Revolver.Draw.rect(this.x-20,this.y,40,20,"#FFD700");
+		}
 		// var img = document.getElementById("kappa" + id);
 		// var x = allPlayers[i].location.x - img.width/2;
 		// var y = allPlayers[i].location.y - img.height/2;
@@ -136,6 +142,11 @@ Revolver.Ocelot = function(){
 	this.update=function(angle,canShoot,isSpecial){
         this.isSpecial = isSpecial;
 		this.angle = angle;
+		if(!this.canShoot && canShoot) {
+			this.r = 0;
+		} else if(this.r < 10) {
+			this.r += 1.5;
+		}
         this.canShoot = canShoot;
 		this.x=Math.cos(this.angle)*this.spacing + this.character.x;
 		this.y=Math.sin(this.angle)*this.spacing + this.character.y;
@@ -168,9 +179,40 @@ Revolver.Bullet = function(x,y,isSelf){
 	}
 	Revolver.Draw.circle(x,y,this.r,color);
 };
+Revolver.Collision = function(x,y,isSpecial,isBoB){
+    this.x=x;
+	this.y=y;
+	this.newx=0;
+	this.newy=0;
+	this.finishedRender = false;
+    this.isSpecial=isSpecial;
+	this.isBoB=isBoB;
+    this.update= function(){
+	    this.newx+=3;
+		this.newy+=3;
+	};
+	this.render = function(){
+	    if(this.isBoB){
+			Revolver.Draw.circle(this.x+this.newx,this.y,5,this.isSpecial?"#663399":"#66FF99");
+			Revolver.Draw.circle(this.x-this.newx,this.y,5,this.isSpecial?"#663399":"#66FF99");
+			Revolver.Draw.circle(this.x,this.y+this.newy,5,this.isSpecial?"#663399":"#66FF99");
+			Revolver.Draw.circle(this.x,this.y-this.newy,5,this.isSpecial?"#663399":"#66FF99");
+		
+		}
+		else{
+			Revolver.Draw.circle(this.x+this.newx,this.y+this.newy,5,this.isSpecial?"#663399":"#66FF99");
+			Revolver.Draw.circle(this.x-this.newx,this.y-this.newy,5,this.isSpecial?"#663399":"#66FF99");
+			Revolver.Draw.circle(this.x-this.newx,this.y+this.newy,5,this.isSpecial?"#663399":"#66FF99");
+			Revolver.Draw.circle(this.x+this.newx,this.y-this.newy,5,this.isSpecial?"#663399":"#66FF99");
+        }    
+	};
+	this.wearedone = function(object) {
+		object.finishedRender = true;
+	}
+	setTimeout(this.wearedone, 200,this);
+}
 
-
-Revolver.action = function(){
+Revolver.action = function(){ 	
     $('#canvasface').mousedown(function(event) {
 		switch (event.which) {
 			case 1:
