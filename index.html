@@ -17,14 +17,14 @@
 	<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
   </head>
 <body id='body' onload="Revolver.init()">
+
     <!-- <ul id="messages"></ul>
     <form action="">
       <input id="m" autocomplete="off" /><button>Send</button>
     </form> -->
 
-	<canvas id="canvasface" width="1000" height="600" style="border:1px solid #000000; background-color: #FFF399" onmousemove ="drawCoords(event)" >Stop using IE you pleb</canvas>
 
-<div style="float:right">
+<div style="position:fixed;right:0px;">
 <h2 id="roomnum">Room 10000</h2>
 
 <ul id="players">
@@ -33,10 +33,21 @@
 </ul>
 
 </div>
+<div style="position:fixed;">
+
+<ul id="killLog">
+  <h3>Time Stamp GUYYSS</h3>
+  <li>HI</li>
+</ul>
+</div>
+
+	<canvas id="canvasface" width="1000" height="600" style="border:1px solid #000000; background-color: #FFF399;" onmousemove ="drawCoords(event)" >Stop using IE you pleb</canvas>
+
 <img id="kappa" src="http://dota2.ru/forum/data/attachments/25/25375-4b97e8b499a874db9c3d58f82c27a4bf.jpg">
 
   <script src="global.js"></script>
 	<script>
+	
 	var socket = io();
 	$('form').submit(function(){
 		socket.emit('chat message', $('#m').val());
@@ -47,15 +58,17 @@
   var user;
   socket.on('user handshake', function(handshake){
 	user = handshake;
-	alert("HI " + handshake["key"]+"\nWe should add a pay-to-win feature. \n-Andrew \"Money-Whore\" Tan");
-
+	var username = prompt("Enter name now: ", handshake["key"]);
+    socket.emit('alias',username);
   });
-
+  socket.on('actionHappened', function(msg) {
+	$('#killLog').append("<li>" + msg + "</li>");
+  });
   socket.on('requestUsers', function(users){
     $('#players').empty();
     for(var i = users.length-1;i>=0;i--)
 	{
-	    $('#players').append("<li>ANDREW TAN IS HERE</li>");
+	    $('#players').append("<li>" + users[i].nickname + " " + users[i].points + "</li>");
 		
 	}
   });
@@ -115,7 +128,7 @@
 	  startTime = Date.now();
 	  socket.emit('ping');
 	  socket.emit('requestUsers');
-	}, 6000);
+	}, 4000);
 
 	socket.on('pong', function() {
 	  latency = Date.now() - startTime;

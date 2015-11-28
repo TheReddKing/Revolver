@@ -1,27 +1,23 @@
-var app = require('express')();
-
+app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+var bodyParser = require('body-parser')
+app.use( bodyParser.json() );       // to support JSON-encoded bodies
+app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+  extended: true
+})); 
 
 app.get('/', function(req, res){
+
    res.sendFile(__dirname + '/index.html');
+   // res.sendFile(__dirname + '/HomeScreen.html');
  // res.sendFile(__dirname + '/plzDoJudge.html');
 });
 
-app.get('/login', function(req, res){
-   res.sendFile(__dirname + '/HomeScreen.html');
+app.post('/', function(req, res){
+   res.sendFile(__dirname + '/index.html');
 });
-app.get('/loginPOST', function(req, res){
-  res.writeHead(200, "OK", {'Content-Type': 'text/html'});
-  res.write('<html><head><title>Hello Noder!</title></head><body>');
-  res.write('<h1>Welcome Noder, who are you?</h1>');
-  res.write('<form enctype="application/x-www-form-urlencoded" action="/formhandler" method="post">');
-  res.write('Name: <input type="text" name="username" value="John Doe" /><br />');
-  res.write('Age: <input type="text" name="userage" value="99" /><br />');
-  res.write('<input type="submit" />');
-  res.write('</form></body></html');
-  res.end();
-});
+
 app.get('/global.js', function(req, res){
    res.sendFile(__dirname + '/global.js');
 });
@@ -40,15 +36,25 @@ var nextUserNum = 1;
 io.on('connection', function(socket){
 
   nextUserNum++;
-  var user = { id: nextUserNum, key: Math.random() * 1000000, location: {x:0,y:0}, locationToward:{x:0,y:0},angle:0,canShoot:true, bullets:new Array(20), rightClick:false}
+  var user = { id: nextUserNum,
+   nickname: "HI",
+   key: (Math.random() * 1000000),
+   location: {x:0,y:0},
+   locationToward:{x:0,y:0},
+   angle:0,canShoot:true,
+   bullets:new Array(20),
+   points:0,
+   rightClick:false}
   users.push(user);
 
   socket.emit('user handshake', user);
-
+  socket.on('alias', function(name){
+    user.nickname = name;
+  });
   console.log('a user connected: ' + user.id + " with key " + user.key);
   socket.on('rightclick', function(clicked){
     //(>^_^)>rightclick feature. Hella cool! <(^_^<)
-	user.rightClick=clicked;
+	 user.rightClick=clicked;
   });
   socket.on('disconnect', function(){
 	//users.remove(user);
@@ -66,7 +72,7 @@ io.on('connection', function(socket){
 			var x=Math.cos(user.angle)*spacing + user.location.x;
 			var y=Math.sin(user.angle)*spacing + user.location.y;
 			var bullet = {id:user.id, location:{x:x, y:y},angle:user.angle+(Math.PI/2),isExistant:true};
-			console.log(x + " " + y + "DELAY " + (user.angle-angle));
+			// console.log(x + " " + y + "DELAY " + (user.angle-angle));
 			user.canShoot = false;
 			setTimeout(function() {
 				user.canShoot = true;  //Reload Time
@@ -91,13 +97,13 @@ io.on('connection', function(socket){
   socket.on('requestUsers', function(){
       var localusers = [];
       for(var i =0;i<users.length;i++) {
-          localusers.push({id:users[i].id});
+          localusers.push({id:users[i].id,nickname:users[i].nickname, points:users[i].points});
       }
       io.emit('requestUsers', localusers);
   });
   socket.on('location', function(location) {
 	    user.locationToward = location;
-	    console.log('location' + user.locationToward.x + " " + user.locationToward.y);
+	    // console.log('location' + user.locationToward.x + " " + user.locationToward.y);
   });
   socket.on('chat message', function(msg){
       console.log('message: ' + msg + " -- from: " + user.id);
@@ -129,25 +135,30 @@ setInterval(function(){
 	var allBullets = [];
 	// console.log(users.length);
     for(var p=0;p<users.length;p++) {
-        var bullets = users[p].bullets;
+      var bullets = users[p].bullets;
     	for(var b =bullets.length-1;b>=0;b--)
     	{
+        if(bullets[b] == null)
+          continue;
 
-            if(bullets[b] == null)
-              continue;
-
-              if(!bullets[b].isExistant)
-                continue;
-    	    for(var u = users.length-1;u>=0;u--)
+        if(!bullets[b].isExistant)
+          continue;
+    	  for(var u = users.length-1;u>=0;u--)
     		{
-    		    if(collides(users[u],bullets[b],20,10))
+    		  if(collides(users[u],bullets[b],20,10))
     			{
-    			    if(bullets[b].id != users[u].id)
+    			  if(bullets[b].id != users[u].id)
     				{
     				    console.log("COLLISION");
-                        bullets[b].isExistant = false;
+                bullets[b].isExistant = false;
+                users[p].points += 1;
+                users[u].points -= Math.round(Math.log(4*(users[u].points-4)));
+                if(users[u].points == undefined || users[u].points < 0) {
+                  users[u].points = 0;
+                }
+                io.emit('actionHappened', users[p].nickname + " hit " + users[u].nickname);
               		    // bullets.splice(b,b+1);
-                        break;
+                break;
     				}
 
     			}

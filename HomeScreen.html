@@ -10,12 +10,12 @@
 		<div id ="startmenu" style = "text-align: center">
 			<p id="title">Revolver</p>
 			<p id="subtitle">Where every shot is a 360 noscope!</p>
-			<form action="loginPOST" method="post" enctype="application/x-www-form-urlencoded">
-				<input type="text" name="UserName" tabindex="0" autofocus placeholder="Enter username here" id="playerNameInput" maxlength="16">
+			<form  action="./" method="post" enctype="application/x-www-form-urlencoded">
+				<input required type="text" name="UserName" tabindex="0" autofocus placeholder="Enter username here" id="playerNameInput" maxlength="16">
 				<br/>
 				<b class="input-error" style= "font-size: 10px; font-weight: 500; color: #999999;";>(Username must be alphanumeric)</b>
 				<br/>
-				<input type="text" name="RoomNumber" placeholder="Enter room number here" id="roomNumberInput" maxlength="5">
+				<input required type="text" name="RoomNumber" placeholder="Enter room number here" id="roomNumberInput" maxlength="5">
 				<br/>
 				<button id="startButton" value="submit">Play</button>
 			</form>
