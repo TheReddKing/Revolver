@@ -126,6 +126,7 @@ Revolver.Character = function(){
 		// cvs.drawImage(img,x,y);
 	};
 };
+
 Revolver.Ocelot = function(){
     this.r=10;
 	this.type= 'ocelot';
@@ -179,6 +180,18 @@ Revolver.Bullet = function(x,y,isSelf){
 	}
 	Revolver.Draw.circle(x,y,this.r,color);
 };
+Revolver.Terrain = function(x,y){
+    this.r = 50;
+	this.x = x;
+	this.y = y;
+	this.update = function(){
+	}
+	this.render = function(){
+	    Revolver.Draw.circle(this.x,this.y,this.r,"#87421F");
+	}
+
+
+}
 Revolver.Collision = function(x,y,isSpecial,isBoB){
     this.x=x;
 	this.y=y;

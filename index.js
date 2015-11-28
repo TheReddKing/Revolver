@@ -35,14 +35,21 @@ app.get('/css.css', function(req, res){
 require("./login.js");
 
 //Game
-
+var GT =  { PantKing:0, RoundKill:1 };
 var game = {
+  type: GT.PantKing,
+  isPlaying: true,
+  timeTillNext: 10,
+  timeInterval: null,
   gameTime:0,
   totalPoints:20
 };
 var users = [];
 var nextUserNum = 1;
-
+var terrainlocations = {
+   x1: Math.round(Math.random()* 1000),
+   y1: Math.round(Math.random()* 600),
+}
 io.on('connection', function(socket){
 
   nextUserNum++;
@@ -51,6 +58,7 @@ io.on('connection', function(socket){
    key: Math.round(Math.random() * 1000000),
    location: {x:0,y:0},
    locationToward:{x:0,y:0},
+   isOn: true,
    angle:0,canShoot:true,
    bullets:new Array(20),
    points:0,
@@ -60,11 +68,12 @@ io.on('connection', function(socket){
    }
 
    var didpush = false;
-  socket.emit('user handshake', user);
-  socket.on('alias', function(name){
+   socket.emit('user handshake', user);
+   socket.on('alias', function(name){
     if(/[a-zA-Z0-9]/.test( name) && name.length <= 16 && !didpush) {
       user.nickname = name;
       users.push(user);
+	  gamepresets();
       didpush = true;
     }
 	// if(name == "faguette")
@@ -195,10 +204,27 @@ setInterval(function(){
         }
       }
     }
+    if(localusers[0].pointTime == 30) {
+      io.emit('endgame',localusers[0]);
+    }
     io.emit('requestUsers', localusers);
 }, 1000); //Fps sending
+function gamepresets() {
+  var allTerrain = [];
+  for(var i = 0;i<2;i++)
+  {
+      var terrain = {location:{x:terrainlocations.x1,y:terrainlocations.y1}};
+      allTerrain.push(terrain);
+  }
+
+  socket.emit("gamepresets",game,allTerrain);
+}
 //Global data sender
-setInterval(function(){
+//If no games are playing, stop the interval +++++++++++++++++++++++++++++++++
+var gameInterval = setInterval(function(){
+  if(!game.isPlaying) {
+    break;
+  }
 	var allPlayers = [];
 	var allBullets = [];
   var allCollisions= [];
@@ -220,9 +246,16 @@ setInterval(function(){
     				{
     				    console.log("COLLISION");
                 bullets[b].isExistant = false;
-                users[p].points += 1;
-                if(users[u].points > 0)
-                  users[u].points -= Math.round(Math.log((users[u].points)));
+                var ptChange = Math.round(users[u].points*0.1 + 1);
+                if(game.totalPoints > 0) {
+
+                  users[p].points += 1;
+                  game.totalPoints -= 1;
+                }
+                if(users[u].points > 0) {
+                  users[p].points += ptChange;
+                  users[u].points -= ptChange;
+                }
 				
                   var collision = {location:{x:bullets[b].location.x,y:bullets[b].location.y}, id:users[p].id, isBoB:false};  ////////////////collision
                   allCollisions.push(collision);
@@ -338,7 +371,7 @@ setInterval(function(){
     		allBullets.push({location:b.location,id:users[p].id});
     	}
     }
-	io.emit('data', allPlayers,allBullets,allCollisions);
+	io.emit('data',allPlayers,allBullets,allCollisions);
 }, 1000/30); //Fps sending
 
 http.listen(80, function(){

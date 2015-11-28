@@ -50,7 +50,7 @@
 </ul>
 </div>
   <iframe id="yoface" width= "100%" height = "100%" style="position:fixed;" src="login"></iframe>
-  <iframe id="endgamefantasy" width= "400px" height = "300px" style="position:fixed;" src="endgame"></iframe>
+  <iframe id="endgamefantasy" width= "400px" height = "300px" src="endgame"></iframe>
   <canvas id="canvasface" width="1000" height="600" style="border:1px solid #000000; background-color: #FFF399;" onmousemove ="drawCoords(event)" >Stop using NETSCAPE NAVIGATOR you pleb</canvas>
 
 <img id="kappa" src="http://dota2.ru/forum/data/attachments/25/25375-4b97e8b499a874db9c3d58f82c27a4bf.jpg">
@@ -88,19 +88,23 @@
     // socket.emit('alias',username);
     });
       //WIN GAME SCENARIO
-      socket.on('gameOver', function(userWhoWon) {
-        //Here I need to show
+      
+      socket.on('endgame', function(userWhoWon) {
+        //Here I need to show my donger
+        $("#endgamefantasy").show();
+        $("#endgamefantasy").contents().find("#GPlayer").text = userWhoWon.nickname;
       });
+
 
     socket.on('actionHappened', function(msg) {
         $('#killLog').append("<li>" + msg + "</li>");
       setTimeout(function(){$('#killLog').children().first().next().remove();},5000);
     });
     socket.on('requestUsers', function(users){
-        $('#playertable').empty();
-        //Stuffs
-        $('#playertable').append("<tr>  <th>Player</th>  <th>Score</th>  <th>Time</th>  </tr>");
-        for(var i = 0;i<users.length;i++)
+      $('#playertable').empty();
+      //Stuffs
+      $('#playertable').append("<tr>  <th>Player</th>  <th>Score</th>  <th>Time</th>  </tr>");
+      for(var i = 0;i<users.length;i++)
       {
           $('#playertable').append("<tr><td>" + (users[i].nickname + "            ") + "</td><td> " + users[i].points + "</td><td>" + users[i].pointTime + "</td></tr>");
         
@@ -118,8 +122,18 @@
 		  }
 	  }
     });
+	var terrain=[];
+	socket.on('gamepresets',function(game,allTerrain){
+	    for(var i = allTerrain.length-1;i>=0;i--)
+		{
+		    terrain.push(new Revolver.Terrain(allTerrain[i].location.x,allTerrain[i].location.y));
+		}
+	
+	
+	});
     var ids = [];
 	var collisions = [];
+
     socket.on('data', function(allPlayers,allBullets,allCollisions){//these paramerters are arrays []
       <!-- $('#messages').append($('<li>').text(msg)); -->
       //allPlayers.x .. .y
@@ -128,6 +142,11 @@
       if(!gameOn)
         return;
       Revolver.Draw.clear();
+	  
+	  for(var i = 0 ; i<terrain.length;i++)
+	  {
+	    terrain[i].render();
+	  }
 	  for (var i = 0;i<allCollisions.length;i++)//made by Andrew Tan
 	  {
 	    collisions.push(new Revolver.Collision(allCollisions[i].location.x,allCollisions[i].location.y,allCollisions[i].id==client_user.id,allCollisions[i].isBoB));
