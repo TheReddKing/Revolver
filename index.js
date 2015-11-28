@@ -13,10 +13,17 @@ app.get('/', function(req, res){
    // res.sendFile(__dirname + '/HomeScreen.html');
  // res.sendFile(__dirname + '/plzDoJudge.html');
 });
+app.get('/login',function(req, res){
 
+  res.sendFile(__dirname + '/HomeScreen.html');
+ // res.sendFile(__dirname + '/plzDoJudge.html');
+});
 app.post('/', function(req, res){
    res.sendFile(__dirname + '/index.html');
 });
+app.get('/website', function(req, res) {
+  res.sendFile(__dirname + "/website.html");
+})
 
 app.get('/global.js', function(req, res){
    res.sendFile(__dirname + '/global.js');
@@ -29,7 +36,9 @@ require("./login.js");
 
 //Game
 
-
+var game = {
+  gameTime:0
+};
 var users = [];
 var nextUserNum = 1;
 
@@ -37,19 +46,30 @@ io.on('connection', function(socket){
 
   nextUserNum++;
   var user = { id: nextUserNum,
-   nickname: "HI",
-   key: (Math.random() * 1000000),
+   nickname: "Anoyomous",
+   key: Math.round(Math.random() * 1000000),
    location: {x:0,y:0},
    locationToward:{x:0,y:0},
    angle:0,canShoot:true,
    bullets:new Array(20),
    points:0,
-   rightClick:false}
-  users.push(user);
+   pointTime:0,
+   rightClick:false
+   }
 
   socket.emit('user handshake', user);
   socket.on('alias', function(name){
-    user.nickname = name;
+    if(/[a-zA-Z0-9]/.test( name)) {
+      user.nickname = name;
+      users.push(user);
+    }
+	// if(name == "faguette")
+	// {
+	//   user.reloadtime = 0;
+	// }
+	// else{
+	//   user.reloadtime = 1000;
+	// }
   });
   console.log('a user connected: ' + user.id + " with key " + user.key);
   socket.on('rightclick', function(clicked){
@@ -66,7 +86,9 @@ io.on('connection', function(socket){
   	}
     console.log('user disconnected');
   });
+
   function makeBullet(angle) {
+      
 	  if(user.canShoot) {
 			var spacing = 40;
 			var x=Math.cos(user.angle)*spacing + user.location.x;
@@ -74,13 +96,15 @@ io.on('connection', function(socket){
 			var bullet = {id:user.id, location:{x:x, y:y},angle:user.angle+(Math.PI/2),isExistant:true};
 			// console.log(x + " " + y + "DELAY " + (user.angle-angle));
 			user.canShoot = false;
+			
 			setTimeout(function() {
 				user.canShoot = true;  //Reload Time
-				//makeBullet(angle); ONLY FOR DEBUGGING DON'T TOUCH, PREDCIOUS COSDE. MY PRESCIOUSSS
+				//makeBullet(angle); //ONLY FOR DEBUGGING DON'T TOUCH, PREDCIOUS COSDE. MY PRESCIOUSSS
 			},1000);
       for(var i=0;i<user.bullets.length;i++) {
         if(user.bullets[i] == null || user.bullets[i].isExistant == false) {
           user.bullets[i] = bullet;
+          break;
         }
       }
 			//Let's see if I can remove bullets
@@ -92,16 +116,28 @@ io.on('connection', function(socket){
 		 }
   }
   socket.on('bullet', function(angle) {
-	makeBullet(angle);
+	 makeBullet(angle);
   });
   socket.on('requestUsers', function(){
-      var localusers = [];
-      for(var i =0;i<users.length;i++) {
-          localusers.push({id:users[i].id,nickname:users[i].nickname, points:users[i].points});
-      }
-      io.emit('requestUsers', localusers);
+    // var localusers = [];
+
+    // for(var i =0;i<users.length;i++) {
+    //     localusers.push({id:users[i].id,nickname:users[i].nickname, points:users[i].points,pointTime:users[i].pointTime});
+    // }
+    // io.emit('requestUsers', localusers);
   });
   socket.on('location', function(location) {
+    if(location.x > 1000)
+      location.x = 1000;
+    if(location.x < 0) {
+      location.x = 0;
+    }
+    if(location.y > 600) {
+      location.y = 600;
+    }
+    if(location.y < 0) {
+      location.y =0;
+    }
 	    user.locationToward = location;
 	    // console.log('location' + user.locationToward.x + " " + user.locationToward.y);
   });
@@ -128,7 +164,34 @@ function collides(a,b,ar,br)
         return false;
     }
 }
+//1 second updater
+setInterval(function(){
+    if(users.length == 0) {
+        return;
+    }
+    game.pointTime += 1;
+    var localusers = [];
+    for(var i =0;i<users.length;i++) {
+        localusers.push({id:users[i].id,nickname:users[i].nickname, points:users[i].points,pointTime:users[i].pointTime});
+    }
+    localusers.sort(function (a, b){
+      return ((a.points < b.points) ? 1 : ((a.points > b.points) ? -1 : 0));
+    });
+    if(localusers.length > 1) {
+      if(localusers[0].points == localusers[1].points) {
 
+      } else {
+        for(var i=0;i<users.length;i++ ){
+          if(users[i].id == localusers[0].id) {
+            users[i].pointTime+=1;
+            localusers[0].pointTime += 1;
+            break;
+          }
+        }
+      }
+    }
+    io.emit('requestUsers', localusers);
+}, 1000); //Fps sending
 //Global data sender
 setInterval(function(){
 	var allPlayers = [];
@@ -152,11 +215,9 @@ setInterval(function(){
     				    console.log("COLLISION");
                 bullets[b].isExistant = false;
                 users[p].points += 1;
-                users[u].points -= Math.round(Math.log(4*(users[u].points-4)));
-                if(users[u].points == undefined || users[u].points < 0) {
-                  users[u].points = 0;
-                }
-                io.emit('actionHappened', users[p].nickname + " hit " + users[u].nickname);
+                if(users[u].points > 0)
+                  users[u].points -= Math.round(Math.log((users[u].points)));
+                io.emit('actionHappened', users[p].nickname + " shot " + users[u].nickname);
               		    // bullets.splice(b,b+1);
                 break;
     				}
@@ -237,16 +298,6 @@ setInterval(function(){
 			u.location.x += changeX * mag;
 			u.location.y += changeY * mag;
 		}
-		//var angle = Math.atan(changeY/changeX) * 180 / 3.1415926;
-		//if(changeX < 0 && changeY >= 0) {
-		//	angle = 180 + angle;
-		//} else if(changeX < 0 && changeY < 0) {
-		//	angle = 180 - angle;
-		//}
-
-		//else if (angle < 0) {
-		//	angle = 360 - angle;
-		//}
 		//magnitude is 12
 		if(u.rightClick){
 		    u.angle += Math.PI/180*2;
@@ -254,7 +305,7 @@ setInterval(function(){
 		else{
 		    u.angle += Math.PI/180 *8;
 		}
-		var player = { id:u.id, location:u.location,angle:u.angle,shoot:u.canShoot};
+		var player = { id:u.id, location:u.location,angle:u.angle,shoot:u.canShoot,nickname:u.nickname};
 		// console.log("HI " + u.location.x + " " + u.location.y + " " + u.angle);
 		allPlayers.push(player);
 	}
@@ -269,8 +320,8 @@ setInterval(function(){
             if(!b.isExistant)
                 continue;
 
-    		b.location.x+=Math.cos(b.angle) * 1;//bullet speed
-    		b.location.y+=Math.sin(b.angle) * 1;
+    		b.location.x+=Math.cos(b.angle) * 20;//bullet speed
+    		b.location.y+=Math.sin(b.angle) * 20;
     		allBullets.push({location:b.location,id:b.id});
     	}
     }

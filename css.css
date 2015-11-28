@@ -5,3 +5,17 @@ canvas {
     margin-right: auto;
     display: block;
 }
+
+#scoreboard {
+	border-radius: 25px;
+    background: #8AC007;
+    padding: 20px;
+    width: 200px;
+    height: 150px;
+}
+
+#scoreboard ul {
+	list-style-type:none; 
+    font-size: 1.2em;
+    
+}

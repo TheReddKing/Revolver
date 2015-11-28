@@ -88,10 +88,12 @@ Revolver.Character = function(){
 	this.r = 20;
 	this.ocelot = new Revolver.Ocelot();
     this.isSpecial = false;
-	this.init = function(id, x, y, angle,canShoot) {
+	this.name = "";
+	this.init = function(id, x, y, angle,canShoot,name) {
 		this.id = id;
 		this.x = x;
 		this.y = y;
+		this.name=name;
 		this.ocelot.init(this);
 		this.ocelot.update(angle,canShoot,this.isSpecial);
 		this.render();
@@ -99,7 +101,8 @@ Revolver.Character = function(){
     this.imSpecial = function() {
         this.isSpecial = true;
     }
-	this.update=function(x,y, angle,canShoot){
+	this.update=function(x,y, angle,canShoot,name){
+		this.name=name;
 		this.x = x;
 		this.y = y;
 		this.ocelot.update(angle,canShoot,this.isSpecial);
@@ -109,6 +112,8 @@ Revolver.Character = function(){
 
 
 		Revolver.Draw.circle(this.x,this.y,this.r,this.isSpecial?"#003300":"#008800");
+		Revolver.Draw.text(this.name,this.x,this.y-36,15,"#2b3dc2");
+		Revolver.ctx.textAlign="center";
 		// var img = document.getElementById("kappa" + id);
 		// var x = allPlayers[i].location.x - img.width/2;
 		// var y = allPlayers[i].location.y - img.height/2;
@@ -146,11 +151,12 @@ Revolver.Ocelot = function(){
 
 		if(this.canShoot) {
 			Revolver.Draw.circle(this.x,this.y,this.r,this.isSpecial?"#663399":"#66FF99");
+
 		}
 
 	};
 };
-Revolver.Bullet = function(x,y,isSelf){
+Revolver.Bullet = function(x,y,isSelf){	
 	this.r = 10;
 
     if(isSelf) {
@@ -162,17 +168,14 @@ Revolver.Bullet = function(x,y,isSelf){
 	}
 	Revolver.Draw.circle(x,y,this.r,color);
 };
-Revolver.leftclick = function() {
-	socket.emit('bullet', 0);
-}
-Revolver.rightclick= function(){
-    
-}
+
+
 Revolver.action = function(){
     $('#canvasface').mousedown(function(event) {
 		switch (event.which) {
 			case 1:
-				Revolver.leftclick();
+				
+				socket.emit('bullet', 0);
 				console.log("left clickk");
 				break;
 			case 2:
@@ -207,3 +210,4 @@ Revolver.action = function(){
     });
 }
 window.addEventListener('load',Revolver.action,false);
+window.addEventListener('mousedown', function(e){ e.preventDefault(); }, false);
