@@ -85,7 +85,7 @@ Revolver.Character = function(){
 	this.x = 0;
 	this.y = 0;
 	this.id = 0;
-	this.r = 20;
+	this.r = 18;
 	this.ocelot = new Revolver.Ocelot();
     this.isSpecial = false;
 	this.name = "";
@@ -118,7 +118,7 @@ Revolver.Character = function(){
 		Revolver.ctx.textAlign="center";
 		if(this.pants)
 		{
-		    Revolver.Draw.rect(this.x-20,this.y,40,20,"#FFD700");
+		    Revolver.Draw.rect(this.x-18,this.y,36,18,"#FFD700");
 		}
 		// var img = document.getElementById("kappa" + id);
 		// var x = allPlayers[i].location.x - img.width/2;
@@ -128,9 +128,9 @@ Revolver.Character = function(){
 };
 
 Revolver.Ocelot = function(){
-    this.r=10;
+    this.r=8;
 	this.type= 'ocelot';
-	this.spacing= 40;
+	this.spacing= 35;
 	this.angle= 0; //change by pi/180
 	this.speed= 10;
 	this.character;
@@ -145,7 +145,7 @@ Revolver.Ocelot = function(){
 		this.angle = angle;
 		if(!this.canShoot && canShoot) {
 			this.r = 0;
-		} else if(this.r < 10) {
+		} else if(this.r < 8) {
 			this.r += 1.5;
 		}
         this.canShoot = canShoot;
@@ -169,7 +169,7 @@ Revolver.Ocelot = function(){
 	};
 };
 Revolver.Bullet = function(x,y,isSelf){	
-	this.r = 10;
+	this.r = 8;
 
     if(isSelf) {
 
@@ -206,17 +206,17 @@ Revolver.Collision = function(x,y,isSpecial,isBoB){
 	};
 	this.render = function(){
 	    if(this.isBoB){
-			Revolver.Draw.circle(this.x+this.newx,this.y,5,this.isSpecial?"#663399":"#66FF99");
-			Revolver.Draw.circle(this.x-this.newx,this.y,5,this.isSpecial?"#663399":"#66FF99");
-			Revolver.Draw.circle(this.x,this.y+this.newy,5,this.isSpecial?"#663399":"#66FF99");
-			Revolver.Draw.circle(this.x,this.y-this.newy,5,this.isSpecial?"#663399":"#66FF99");
+			Revolver.Draw.circle(this.x+this.newx,this.y,4,this.isSpecial?"#663399":"#66FF99");
+			Revolver.Draw.circle(this.x-this.newx,this.y,4,this.isSpecial?"#663399":"#66FF99");
+			Revolver.Draw.circle(this.x,this.y+this.newy,4,this.isSpecial?"#663399":"#66FF99");
+			Revolver.Draw.circle(this.x,this.y-this.newy,4,this.isSpecial?"#663399":"#66FF99");
 		
 		}
 		else{
-			Revolver.Draw.circle(this.x+this.newx,this.y+this.newy,5,this.isSpecial?"#663399":"#66FF99");
-			Revolver.Draw.circle(this.x-this.newx,this.y-this.newy,5,this.isSpecial?"#663399":"#66FF99");
-			Revolver.Draw.circle(this.x-this.newx,this.y+this.newy,5,this.isSpecial?"#663399":"#66FF99");
-			Revolver.Draw.circle(this.x+this.newx,this.y-this.newy,5,this.isSpecial?"#663399":"#66FF99");
+			Revolver.Draw.circle(this.x+this.newx,this.y+this.newy,4,this.isSpecial?"#663399":"#66FF99");
+			Revolver.Draw.circle(this.x-this.newx,this.y-this.newy,4,this.isSpecial?"#663399":"#66FF99");
+			Revolver.Draw.circle(this.x-this.newx,this.y+this.newy,4,this.isSpecial?"#663399":"#66FF99");
+			Revolver.Draw.circle(this.x+this.newx,this.y-this.newy,4,this.isSpecial?"#663399":"#66FF99");
         }    
 	};
 	this.wearedone = function(object) {

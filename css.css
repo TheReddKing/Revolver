@@ -1,14 +1,14 @@
 canvas {
     padding-left: 0;
     padding-right: 0;
-    margin-left: auto;
-    margin-right: auto;
-    display: block;
+    margin-left: 5%;
+    margin-right: 0;
+    display: inline-block;
 }
 
 #scoreboard {
 	border-style: solid;
-	border-width: 1px;
+	border-width: 3px;
 	border-color: #000000;
     background: #eeeeee;
     padding: 12px;
@@ -29,7 +29,7 @@ canvas {
     background: #eeeeee;
 	padding: 12px;
     width: 300px;
-    height: 602px;
+    height: 604px;
 }
 #playertable {
     text-align: center;;
