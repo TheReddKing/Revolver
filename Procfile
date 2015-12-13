@@ -1,1 +1,1 @@
-web: node index.js
+web: sudo node index.js
