@@ -33,6 +33,9 @@ app.get('/kappa.png', function(req,res) {
 app.get('/betterLOGO.png', function(req,res) {
     res.sendFile(__dirname + "/betterLOGO.png");
 })
+app.get('/bestestLOGO.png', function(req,res) {
+    res.sendFile(__dirname + "/bestestLOGO.png");
+})
 app.get('/littleLOGO.png', function(req,res) {
     res.sendFile(__dirname + "/littleLOGO.png");
 })
