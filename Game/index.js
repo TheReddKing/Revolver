@@ -423,8 +423,8 @@ io.on('connection', function(socket) {
         if (location.y < 0) {
             location.y = 0;
         }
-		
-		
+
+
 
         user.locationToward = location;
         // console.log('location' + user.locationToward.x + " " + user.locationToward.y);
@@ -709,9 +709,9 @@ var gameInterval = setInterval(function() {
 						}
 						//console.log("user hit terrain");
 						var slope = (u.location.y-game.allTerrain[t].location.y)/(u.location.x-game.allTerrain[t].location.x);
-						
+
 						var changex = Math.sqrt(4/(1+(slope*slope)));
-						
+
 						if(u.location.x<game.allTerrain[t].location.x)
 						{
 							//console.log("user hit from other side");
@@ -719,7 +719,7 @@ var gameInterval = setInterval(function() {
 						}
 						var changey = slope*changex;//this stuff moves the user back 2 units
                         u.location.x += changex;
-                        u.location.y += changey;	
+                        u.location.y += changey;
 					}
 				}
             }
@@ -795,6 +795,6 @@ var gameInterval = setInterval(function() {
     }
 }, 1000 / 30); //Fps sending
 
-http.listen(80, function() {
-    console.log('listening on *:80');
+http.listen(3256, function() {
+    console.log('listening on *:3256');
 });
