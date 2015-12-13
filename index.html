@@ -84,7 +84,6 @@
 
     <iframe id="yoface" width="100%" height="100%" style="position:fixed;" src="login"></iframe>
     <iframe id="endgamefantasy" width="100%" height="100%" src="endgame"></iframe>
-    <iframe id="pregamefantasy" width="100%" height="100%" style="display: block;" src="pregame"></iframe>
     <canvas id="canvasface" width="800" height="600" style="border:2px solid #000000; background-color: #FFF399; text-decoration: none;" onmousemove="drawCoords(event)">Stop using NETSCAPE NAVIGATOR you pleb</canvas>
 
     <img id="kappa" src="http://dota2.ru/forum/data/attachments/25/25375-4b97e8b499a874db9c3d58f82c27a4bf.jpg">
@@ -95,13 +94,16 @@
 
         var gameOn = false;
         $("#endgamefantasy").hide();
-        $("#pregamefantasy").hide();
+        // $("#pregamefantasy").hide();
         socket.on('gamepreupdate', function(game) {
+            $("#roomnum").text("Room " + (game.roomNumber+1));
             $("#endgamefantasy").contents().find("#Timer").text(game.timeTillNext);
             console.log("TIME IS COMMING");
         });
         socket.on('gamelobby', function(game) {
-            $("#pregamefantasy").show();
+            $("#roomnum").text("Room " + (game.roomNumber+1));
+            $("#endgamefantasy").attr("src","pregame");
+            $("#endgamefantasy").show();
             console.log("MYFACE IS MINE");
         });
         $("#yoface").load(function() {
@@ -115,12 +117,18 @@
                 } else {
                     socket.emit('logincomplete', aliass, roomba);
                 }
+            });
+        });
+        socket.on("logincomplete", function(yes, error) {
+            if(yes) {
+
                 $("#yoface").hide();
                 Revolver.init();
                 gameOn = true;
-            });
+            } else {
+                alert(error);
+            }
         });
-
         function setCookie(cname, cvalue, exdays) {
             var d = new Date();
             d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
@@ -165,6 +173,7 @@
         socket.on('endgame', function(userWhoWon) {
             //Here I need to show my donger
             $("#endgamefantasy").show();
+
             $("#endgamefantasy").contents().find("#GPlayer").text(userWhoWon.nickname);
         });
 
@@ -175,7 +184,7 @@
                 $('#killLog').children().first().next().remove();
             }, 5000);
         });
-        socket.on('updateusers', function(users) {
+        socket.on('updateusers', function(users,isTie) {
             $('#playertable').empty();
             //Stuffs
             $('#playertable').append("<tr>  <th>Player</th>  <th>Score</th>  <th>Time</th>  </tr>");
@@ -185,22 +194,29 @@
             }
             var id = users[0].id;
             for (var i = 0; i < ids.length; i++) {
-                if (ids[i].id == id) {
-                    ids[i].pants = true;
-                } else {
-                    ids[i].pants = false;
-                }
+				if(isTie){
+					ids[i].pants = false;
+				}
+				else{
+					if (ids[i].id == id) {
+						ids[i].pants = true;
+					} else {
+						ids[i].pants = false;
+					}
+				}
             }
         });
         var terrain = [];
         socket.on('gamepresets', function(game, allTerrain) {
+            $("#roomnum").text("Room " + (game.roomNumber+1));
             terrain = [];
 
             for (var i = allTerrain.length - 1; i >= 0; i--) {
                 terrain.push(new Revolver.Terrain(allTerrain[i].location.x, allTerrain[i].location.y));
             }
             $("#endgamefantasy").hide();
-            $("#pregamefantasy").hide();
+            $("#endgamefantasy").attr("src","endgame");
+            // $("#pregamefantasy").hide();
 
 
         });

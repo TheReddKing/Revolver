@@ -35,7 +35,6 @@ app.get('/css.css', function(req, res) {
     res.sendFile(__dirname + '/css.css');
 });
 
-require("./login.js");
 
 //Game
 var GT = {
@@ -77,7 +76,7 @@ for (var v = 0; v < lobby.games.length; v++) {
 
 //global settings
 GLOBAL_PANTKING_TIMEWIN = 5;
-GLOBAL_TIMEINBETWEEN = 2;
+GLOBAL_TIMEINBETWEEN = 4;
 
 
 var allUsers = [];
@@ -101,6 +100,7 @@ function gameLobby(gameID) {
         }
         if (game.state == GS.Playing) {
             clearInterval(game.timeInterval);
+            console.log("Your right, lets start the game");
             gamepresets(game.roomNumber);
             return;
         }
@@ -174,6 +174,24 @@ function gameInBetween(gameID) {
 }
 
 function gameAddUser(user, game) {
+
+    //So now lets create a game lobby
+    var didAdd = false;
+    for (var v = 0; v < game.users.length; v++) {
+        if (game.users[v] == null) {
+            game.users[v] = user;
+            didAdd = true;
+            break;
+        }
+    }
+    if(!didAdd) {
+        return false;
+    }
+    if (game.state == GS.Playing) {
+        //Game is on let's add the terrain for the non-believers
+        user.emit(game.roomNumber, "gamepresets", 2, getDistilledGame(game.roomNumber), game.allTerrain);
+    }
+
     if (game.state == GS.Waiting4Two) {
         //Lets play
         game.state = GS.Playing;
@@ -182,19 +200,9 @@ function gameAddUser(user, game) {
         game.state = GS.Waiting4Two;
         gameLobby(game.roomNumber); //Let's wait for 2
     }
-    //So now lets create a game lobby
-    for (var v = 0; v < game.users.length; v++) {
-        if (game.users[v] == null) {
-            game.users[v] = user;
-            break;
-        }
-    }
-    if (game.state == GS.Playing) {
-        //Game is on let's add the terrain for the non-believers
-        user.emit(game.roomNumber, "gamepresets", 2, getDistilledGame(game.roomNumber), game.allTerrain);
-    }
     console.log("Game ADDED USER " + game.roomNumber + " NOW STATUS " + game.state);
-
+    emitToGame(game.roomNumber, 'actionHappened', 1, user.nickname + " joined the GAME");
+    return true;
 }
 
 function len(array) {
@@ -238,7 +246,7 @@ io.on('connection', function(socket) {
             x: 0,
             y: 0
         },
-        gameStatus: 0,
+        gameStatus: -1337,
         angle: 0,
         canShoot: true,
         bullets: new Array(20),
@@ -253,16 +261,21 @@ io.on('connection', function(socket) {
     var didpush = false;
     socket.emit('user handshake', user.id, user.key);
     socket.on('logincomplete', function(alias, roomNumber) {
+        if(!/[0-9]/.test(roomNumber)) {
+            roomNumber = 1;
+        }
 
-
-        if (/[a-zA-Z0-9]/.test(alias) && alias.length <= 16 && !didpush) {
+        if (/[a-zA-Z0-9]/.test(alias) && alias.length <= 16 && !didpush && /[0-9]/.test(roomNumber)) {
             user.nickname = alias;
             user.gameStatus = roomNumber - 1;
             //ADD MEE PLZ
             game = getGame(roomNumber - 1);
-            gameAddUser(user, game);
-
-            didpush = true;
+            if(!gameAddUser(user, game)) {
+                socket.emit("logincomplete",false,"The Game is currently Full");
+            } else {
+                socket.emit("logincomplete",true,"You have start");
+                didpush = true;
+            }
         }
     });
     console.log('a user connected: ' + user.id + " with key " + user.key);
@@ -276,8 +289,21 @@ io.on('connection', function(socket) {
             user.gameStatus += 1; //GAME STATUS IS NOW -1 BEFORE FLIPPING SIGNS
             user.gameStatus *= -1;
             console.log("DISCONNECT -- NOW YOUR GAME IS " + user.gameStatus);
-            if (game != null)
+            emitToGame(game.roomNumber, 'actionHappened', 1, user.nickname + " disconnected");
+
+            if (game != null) {
                 game.totalPoints += user.points;
+
+                if (len(game.users) == 1) {
+                  game.state = GS.Waiting4Two;
+                  game.isPlaying = false;
+                }
+
+                if (len(game.users) == 0) {
+                  game.state = GS.NoUsers;
+                  game.isPlaying = false;
+                }
+            }
         } else {
             console.log("HACKER--- DUPLICATE DISCONNECT");
         }
@@ -336,17 +362,8 @@ io.on('connection', function(socket) {
         if (location.y < 0) {
             location.y = 0;
         }
-        // //terrain navigation
-        // if(game != null) {
-        //   for(var t=0;t<game.allTerrain.length;t++){
-        //     if(collides(user,game.allTerrain[t],18,50))
-        //     {
-        //       console.log("user entered sharia zone");
-        //       return;
-        //     }
-        //   }
-        // }
-
+		
+		
 
         user.locationToward = location;
         // console.log('location' + user.locationToward.x + " " + user.locationToward.y);
@@ -382,6 +399,7 @@ function emitToGame(roomNumber, emitString, argSize) {
 setInterval(function() {
     for (var gameID = 0; gameID < lobby.games.length; gameID++) {
         var game = getGame(gameID);
+        var isTie = false;
         if (!game.isPlaying) {
             return;
         }
@@ -390,7 +408,7 @@ setInterval(function() {
         var localusers = [];
         for (var i = 0; i < users.length; i++) {
 
-            if (users[i] == null)
+            if (users[i] == null || users[i].gameStatus < 0) // not connected or not
                 continue;
             localusers.push({
                 id: users[i].id,
@@ -407,7 +425,8 @@ setInterval(function() {
         });
         if (localusers.length > 1) {
             if (localusers[0].points == localusers[1].points) {
-
+                //there is tie
+                isTie = true;
             } else {
                 for (var i = 0; i < users.length; i++) {
                     if (users[i] == null)
@@ -424,7 +443,7 @@ setInterval(function() {
             emitToGame(game.roomNumber, 'endgame', 1, localusers[0]);
             gameInBetween(gameID);
         }
-        emitToGame(game.roomNumber, 'updateusers', 1, localusers);
+        emitToGame(game.roomNumber, 'updateusers', 2, localusers,isTie);
     }
 
 }, 1000); //Fps sending
@@ -609,16 +628,42 @@ var gameInterval = setInterval(function() {
                 u.location.y += changeY * mag;
                 //Collision for terrain
 
-                for (var t = 0; t < game.allTerrain.length; t++) {
-                    if (collides(u, game.allTerrain[t], 18, 50)) {
+				//terrain navigation
+				for(var t=0;t<game.allTerrain.length;t++){
+					if(collides(u,game.allTerrain[t],18,50))
+					{
                         u.location.x -= changeX * mag;
                         u.location.y -= changeY * mag;
-                    }
-                }
+						if(u.location.x==game.allTerrain[t].location.x)//if user collides straight vertically with terrain
+						{
+							if(u.location.y>game.allTerrain[t].location.y)
+							{
+								location.y=u.location.y+2;
+							}
+							else
+							{
+								location.y=u.location.y-2;
+							}
+						}
+						//console.log("user hit terrain");
+						var slope = (u.location.y-game.allTerrain[t].location.y)/(u.location.x-game.allTerrain[t].location.x);
+						
+						var changex = Math.sqrt(4/(1+(slope*slope)));
+						
+						if(u.location.x<game.allTerrain[t].location.x)
+						{
+							//console.log("user hit from other side");
+							changex = -Math.sqrt(4/(1+(slope*slope)));
+						}
+						var changey = slope*changex;//this stuff moves the user back 2 units
+                        u.location.x += changex;
+                        u.location.y += changey;	
+					}
+				}
             }
             //magnitude is 12
             if (u.rightClick) {
-                u.angle += Math.PI / 180 * 2;
+                u.angle += Math.PI / 180 * 3;
             } else {
                 u.angle += Math.PI / 180 * 8;
             }
