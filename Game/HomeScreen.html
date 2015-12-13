@@ -29,6 +29,7 @@
 			<input required type="text" name="RoomNumber" value="1" id="roomNumberInput" maxlength="5">
 			<br/>
 			<button id="startButton" value="submit" style="margin-top: 10px">Play</button>
+			<button id="rulesButton" value="submit" class="rules_popup_open" style="margin:0;padding:0px">How to Play</button>
 
 			<!-- </form> -->
 		</div>
@@ -39,11 +40,26 @@
 	    <!-- Add an optional button to close the popup -->
 			<p class="title">Share!</p>
 			<br/>
-			<input type="text" name="link" value="HI HERE's SOMETHING" readonly="readonly">
+			<input type="text" name="link" value="http://apps.reddolution.com:3256" readonly="readonly">
 			<br/>
 			<br/>
 			<br/>
 	    	<button style="top:100px;" class="share_popup_close">Close</button>
+	    </div>
+
+	</div>
+
+	<div id="rules_popup" class='wrapper'>
+
+		<div class="startmenu" style="text-align: center">
+	    <!-- Add an optional button to close the popup -->
+			<p class="title">How to Play!</p>
+			<br/>
+			<p>Left Click to shoot<br/>
+			Right Click to slow down rotation<br/>
+			Get the pants by having the most points <br/>
+		 	Win the game by wearing the pants for 30 seconds</p>
+	    	<button style="top:100px;" class="rules_popup_close">Close</button>
 	    </div>
 
 	</div>
@@ -53,6 +69,9 @@
       $('#share_popup').popup({
 		  transition: 'all 0.3s'
 		});
+		$('#rules_popup').popup({
+  		  transition: 'all 0.3s'
+  		});
     });
  	</script>
 	<nav class="social">
@@ -103,7 +122,7 @@
 		border: 3px solid #555;
 		background-color: #fff;
 	}
-	#share_popup{
+	#share_popup, #rules_popup{
 		width: 380px;
 		height: 200px;
 		margin:0px;
@@ -112,7 +131,7 @@
 		left: 0%;
   		transform: scale(0.8);
 	}
-	.popup_visible #share_popup {
+	.popup_visible #share_popup,.popup_visible #rules_popup {
 	 	transform: scale(1);
 	}
 	.title {
