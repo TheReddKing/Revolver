@@ -27,7 +27,12 @@ app.get('/endgame', function(req, res) {
 app.get('/pregame', function(req, res) {
     res.sendFile(__dirname + "/pregame.html");
 })
-
+app.get('/kappa.png', function(req,res) {
+    res.sendFile(__dirname + "/kappa.png");
+})
+app.get('/betterLOGO.png', function(req,res) {
+    res.sendFile(__dirname + "/betterLOGO.png");
+})
 app.get('/global.js', function(req, res) {
     res.sendFile(__dirname + '/global.js');
 });
@@ -53,8 +58,18 @@ var lobby = {
     privategames: new Array(40) //Unimplemented
 }
 
+
+
+//global settings
+GLOBAL_PANTKING_TIMEWIN = 30;
+GLOBAL_TIMEINBETWEEN = 4;
+GLOBAL_TOTALPOINTSINGAME = 14;
+
+
+
 //Lets get the game lobby done guys
 //First init all games
+
 for (var v = 0; v < lobby.games.length; v++) {
     var game = {
         roomNumber: v,
@@ -64,7 +79,7 @@ for (var v = 0; v < lobby.games.length; v++) {
         timeTillNext: 10,
         timeInterval: null,
         gameTime: 0,
-        totalPoints: 20,
+        totalPoints: GLOBAL_TOTALPOINTSINGAME,
         users: new Array(8),
         specialStuff: null,
         allTerrain: [],
@@ -72,11 +87,6 @@ for (var v = 0; v < lobby.games.length; v++) {
     lobby.games[v] = game;
 }
 
-
-
-//global settings
-GLOBAL_PANTKING_TIMEWIN = 5;
-GLOBAL_TIMEINBETWEEN = 4;
 
 
 var allUsers = [];
@@ -88,12 +98,19 @@ function getGame(roomNumber) {
 
 function getDistilledGame(roomNumber) {
     //NEED TO GET RID OF USERS
-    return lobby.games[roomNumber];
+    var actualGame = lobby.games[roomNumber];
+    var psuedogame = {
+        roomNumber: actualGame.roomNumber,
+        type: actualGame.type,
+        timeTillNext: actualGame.timeTillNext
+    }
+    // console.log(psuedogame);
+    return psuedogame;
 }
 
 function gameLobby(gameID) {
     var game = getGame(gameID);
-    console.log(game);
+    // console.log(game);
     game.timeInterval = setInterval(function() {
         if (len(getGame(gameID).users) == 0 || game.state == GS.NoUsers) {
             clearInterval(game.timeInterval);
@@ -104,7 +121,7 @@ function gameLobby(gameID) {
             gamepresets(game.roomNumber);
             return;
         }
-        emitToGame(game.roomNumber, 'gamelobby', 1, game);
+        emitToGame(game.roomNumber, 'gamelobby', 1, getDistilledGame(game.roomNumber));
     }, 1000);
 }
 
@@ -113,7 +130,7 @@ function gameInBetween(gameID) {
     //This is where I reset everything gameRelated
     game.gameTime = 0;
     game.type = Math.round(Math.random() * 2) == 1 ? GT.PantKing : GT.RoundKill;
-    game.totalPoints = 20;
+    game.totalPoints = GLOBAL_TOTALPOINTSINGAME;
     game.isPlaying = false;
     game.state = GS.Waiting;
 
@@ -167,7 +184,7 @@ function gameInBetween(gameID) {
             game.state = GS.NoUsers;
             console.log("Timer CLEARED");
         }
-        emitToGame(game.roomNumber, 'gamepreupdate', 1, game);
+        emitToGame(game.roomNumber, 'gamepreupdate', 1, getDistilledGame(game.roomNumber));
         game.timeTillNext -= 1;
     }, 1000);
 
@@ -261,11 +278,22 @@ io.on('connection', function(socket) {
     var didpush = false;
     socket.emit('user handshake', user.id, user.key);
     socket.on('logincomplete', function(alias, roomNumber) {
-        if(!/[0-9]/.test(roomNumber)) {
+        if(!/^([0-9])+$/.test(roomNumber) || roomNumber > 20) {
+            socket.emit("logincomplete",false,"Room Number is a number between 1-20");
+            return;
+        }
+        if( roomNumber < 1) {
             roomNumber = 1;
         }
-
-        if (/[a-zA-Z0-9]/.test(alias) && alias.length <= 16 && !didpush && /[0-9]/.test(roomNumber)) {
+        if(alias.length > 16) {
+            socket.emit("logincomplete",false,"Username has to be less than 16 characters");
+            return;
+        }
+        if (!/^([a-zA-Z_ 0-9])+$/.test(alias)) {
+            socket.emit("logincomplete",false,"Plz, ASCII usernames only (a-z, _,A-Z,0-9)");
+            return;
+        }
+        if (/^([a-zA-Z_ 0-9])+$/.test(alias) && alias.length <= 16 && !didpush && /^([0-9])+$/.test(roomNumber)) {
             user.nickname = alias;
             user.gameStatus = roomNumber - 1;
             //ADD MEE PLZ
@@ -286,8 +314,15 @@ io.on('connection', function(socket) {
     socket.on('disconnect', function() {
         //Game variable now incorrect
         if (user.gameStatus >= 0) {
-            user.gameStatus += 1; //GAME STATUS IS NOW -1 BEFORE FLIPPING SIGNS
-            user.gameStatus *= -1;
+            // user.gameStatus += 1; //GAME STATUS IS NOW -1 BEFORE FLIPPING SIGNS
+            // user.gameStatus *= -1;
+            // Bottom code doens't work like that
+            //Just remove the user :|
+            for(var vvvv=0;vvvv<game.users.length;vvvv++ ){
+                if(game.users[vvvv] == user) {
+                    game.users[vvvv] = null; //Just plain remove him
+                }
+            }
             console.log("DISCONNECT -- NOW YOUR GAME IS " + user.gameStatus);
             emitToGame(game.roomNumber, 'actionHappened', 1, user.nickname + " disconnected");
 
@@ -297,6 +332,7 @@ io.on('connection', function(socket) {
                 if (len(game.users) == 1) {
                   game.state = GS.Waiting4Two;
                   game.isPlaying = false;
+                  gameLobby(game.roomNumber);
                 }
 
                 if (len(game.users) == 0) {

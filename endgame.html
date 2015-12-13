@@ -1,20 +1,19 @@
 <div id="EndGameBox">
-    <h1 style="font-size: 50; text-align: center;"> GAME OVER </h1>
-    <p id="GPlayer" style="font-size: 50px; margin-top: -12;margin-bottom: 12" height: 1vw>(THIS GPLAYER)</p>
-    <p style="text-align: center; font-size: 32px; margin: 24px"> GOT THE PANTS </p>
-    <span>Next game type will be </span>
-    <span style="color: #ff0000;">Gametype</span>
-    <br>
-    <span>Starting in
-        <span>
-            <span id="Timer" style="color: #ff0000;">Time</span>
+    <link href='http://fonts.googleapis.com/css?family=Lato&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+    <h1 style="font-size: 50px; text-align: center;margin-top: 20;margin-bottom:30"> GAME OVER </h1>
+    <div style="margin:0px">
+    <p> <span id="GPlayer" style="font-size: 50px; margin-bottom: 12;color: #00ff00;text-align:center" height: 1vw>(THIS GPLAYER) super long</span> <br/>
+    <span style="text-align: center; font-size: 32px; margin: 24px"> GOT THE PANTS </span><br/> Starting in <span id="Timer" style="color: #ff0000;">Time</span> </p>
+    </div>
+    <!-- <span>Next game type will be </span> -->
+    <!-- <span style="color: #ff0000;">Gametype</span> -->
+    <!-- <br> -->
 </div>
 
 <style>
     * {
         font-family: Lato, sans-serif;
     }
-
     #EndGameBox {
         position: fixed;
         top: 50%;
@@ -28,6 +27,8 @@
         border-style: solid;
         border-width: 1px;
         border-color: #000000;
+        border-radius:  10px;
+        border: 3px solid #555;
     }
 
     #Gameover {

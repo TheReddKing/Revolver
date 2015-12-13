@@ -31,8 +31,8 @@
 	<nav class="social">
           <ul>
               <li><a href="http://twitter.com/gian_michelle">Twitter <i class="fa fa-twitter"></i></a></li>
-              <li><a href="http://facebook.com/gian.michelle">Facebook <i class="fa fa-facebook"></i></a></li>
-              <li><a href="http://dribbble.com/gian_michelle">Dribbble <i class="fa fa-dribbble"></i></a></li>
+              <li><a href="http://www.facebook.com/sharer/sharer.php?u=apps.reddolution.com/Apps/1015Revolver">Facebook<i class="fa fa-facebook"></i></a></li>
+              <li><a href="#shareLink">Share Link<i class="fa fa-link"></i></a></li>
               <li><a href="http://behance.net">Behance <i class="fa fa-behance"></i></a></li>
               
           </ul>
@@ -41,9 +41,9 @@
       <!-- http://dribbble.com/gian_michelle -->
 
 
-	<!--<div id="ShareBar">
-
-	</div> -->
+	<!-- <div id="FooterBar">
+	<p>Copyright © The Devil 2015 <span style='float:right;text-align:right'> Build 0.7 </span> </p>
+	</div>  -->
 </body>
 
 <style>
@@ -56,18 +56,19 @@
 	body {
 		background-color: #eeeeee;
 	}
-	#ShareBar {
+	#FooterBar {
+		text-align:center;
+		font-size: 8px;
 		position: fixed;
 		bottom: 0px;
 		left:0px;
 		width: 100%;
-		height: 10%;
-		border: 1px solid #000;
-		background-color: #fff;
+		height: 20px;
+		/*border: 1px solid #000;*/
+		/*background-color: #fff;*/
 	}
 
 	#StartMenuWrapper {
-		border-radius:  10px;
 		position: fixed;
 		top: 50%;
 		left: 50%;
@@ -75,6 +76,7 @@
 		height: 250px;
 		margin-top: -125px;
 		margin-left: -200px;
+		border-radius:  10px;
 		border: 3px solid #555;
 		background-color: #fff;
 	}
@@ -91,11 +93,15 @@
 	}
 
 	.social {
+
+	font-family: Lato, sans-serif;	
+	  margin-top: -150px;
 	  position: fixed;
-	  top: 20%	;
+	  top:50%;
 	}
 	.social a {
 	  color: #000;
+	  padding-right: 5px;
 	  text-decoration: none;
 	}
 	.social ul {
