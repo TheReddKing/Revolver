@@ -7,12 +7,17 @@
 	<title>Revolver</title>
 	<link href='http://fonts.googleapis.com/css?family=Lato&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
 	<link href="//netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="/assets/popup.js"></script>
+
 </head>
 
 <body>
-	<div id="StartMenuWrapper">
-		<div id="startmenu" style="text-align: center">
-			<p id="title">Revolver</p>
+	
+
+	<div id="StartMenuWrapper" class='wrapper'>
+		<div class="startmenu" style="text-align: center">
+			<p class="title">Revolver</p>
 			<p id="subtitle">Where every shot is a 360 noscope!</p>
 			<!-- <form id="form" action="#" method="get" enctype="application/x-www-form-urlencoded"> -->
 			<p style="font-size: 12px">Username:</p>
@@ -28,22 +33,40 @@
 			<!-- </form> -->
 		</div>
 	</div>
+	<div id="share_popup" class='wrapper'>
+
+		<div class="startmenu" style="text-align: center">
+	    <!-- Add an optional button to close the popup -->
+			<p class="title">Share!</p>
+			<br/>
+			<input type="text" name="link" value="HI HERE's SOMETHING" readonly="readonly">
+			<br/>
+			<br/>
+			<br/>
+	    	<button style="top:100px;" class="share_popup_close">Close</button>
+	    </div>
+
+	</div>
+	<script>
+    $(document).ready(function() {
+      // Initialize the plugin
+      $('#share_popup').popup({
+		  transition: 'all 0.3s'
+		});
+    });
+ 	</script>
 	<nav class="social">
           <ul>
-              <li><a href="http://twitter.com/gian_michelle">Twitter <i class="fa fa-twitter"></i></a></li>
-              <li><a href="http://www.facebook.com/sharer/sharer.php?u=apps.reddolution.com/Apps/1015Revolver">Facebook<i class="fa fa-facebook"></i></a></li>
-              <li><a href="#shareLink">Share Link<i class="fa fa-link"></i></a></li>
-              <li><a href="http://behance.net">Behance <i class="fa fa-behance"></i></a></li>
-              
+              <!-- <li><a href="http://twitter.com/gian_michelle">Twitter <i class="fa fa-twitter"></i></a></li> -->
+              <!-- <li><a href="http://www.facebook.com/sharer/sharer.php?u=apps.reddolution.com/Apps/1015Revolver">Facebook<i class="fa fa-facebook"></i></a></li> -->
+              <li><a class="share_popup_open" href="">Share Link<i class="fa fa-link"></i></a></li>
+              <!-- <li><a href="http://behance.net">Behance <i class="fa fa-behance"></i></a></li> -->
           </ul>
       </nav>
       <!-- Kudos to Gian Di Serafino -->
       <!-- http://dribbble.com/gian_michelle -->
 
 
-	<!-- <div id="FooterBar">
-	<p>Copyright © The Devil 2015 <span style='float:right;text-align:right'> Build 0.7 </span> </p>
-	</div>  -->
 </body>
 
 <style>
@@ -68,7 +91,7 @@
 		/*background-color: #fff;*/
 	}
 
-	#StartMenuWrapper {
+	.wrapper {
 		position: fixed;
 		top: 50%;
 		left: 50%;
@@ -80,8 +103,19 @@
 		border: 3px solid #555;
 		background-color: #fff;
 	}
+	#share_popup{
+		width: 380px;
+		height: 200px;
+		margin:0px;
 
-	#title {
+		top: 50px;
+		left: 0%;
+  		transform: scale(0.8);
+	}
+	.popup_visible #share_popup {
+	 	transform: scale(1);
+	}
+	.title {
 		font-size: 32px;
 		font-weight: 900;
 		margin-top: 0px;

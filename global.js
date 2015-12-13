@@ -27,6 +27,9 @@ var Revolver = {
         Revolver.canvas.oncontextmenu = function() {
             return false;
         }
+        
+        //Override function
+
 
 
         // Revolver.loop();

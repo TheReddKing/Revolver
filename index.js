@@ -33,6 +33,9 @@ app.get('/kappa.png', function(req,res) {
 app.get('/betterLOGO.png', function(req,res) {
     res.sendFile(__dirname + "/betterLOGO.png");
 })
+app.get('/littleLOGO.png', function(req,res) {
+    res.sendFile(__dirname + "/littleLOGO.png");
+})
 app.get('/global.js', function(req, res) {
     res.sendFile(__dirname + '/global.js');
 });
@@ -40,6 +43,9 @@ app.get('/css.css', function(req, res) {
     res.sendFile(__dirname + '/css.css');
 });
 
+app.get('/assets/popup.js', function(req, res) {
+    res.sendFile(__dirname + '/assets/popups/jquery.popupoverlay.js');
+});
 
 //Game
 var GT = {
@@ -111,6 +117,8 @@ function getDistilledGame(roomNumber) {
 function gameLobby(gameID) {
     var game = getGame(gameID);
     // console.log(game);
+
+    clearInterval(game.timeInterval);
     game.timeInterval = setInterval(function() {
         if (len(getGame(gameID).users) == 0 || game.state == GS.NoUsers) {
             clearInterval(game.timeInterval);
@@ -171,6 +179,7 @@ function gameInBetween(gameID) {
     }
 
     game.timeTillNext = GLOBAL_TIMEINBETWEEN;
+    clearInterval(game.timeInterval);
     game.timeInterval = setInterval(function() {
         if (game.timeTillNext == 0) {
             //Setup everything
@@ -193,6 +202,15 @@ function gameInBetween(gameID) {
 function gameAddUser(user, game) {
 
     //So now lets create a game lobby
+    for (var v = 0; v < game.users.length; v++) {
+        if (game.users[v] != null) {
+            if(game.users[v].nickname == user.nickname) {
+                return 2;
+            }
+        }
+    }
+
+    ////////////////////////////////////////////
     var didAdd = false;
     for (var v = 0; v < game.users.length; v++) {
         if (game.users[v] == null) {
@@ -202,10 +220,11 @@ function gameAddUser(user, game) {
         }
     }
     if(!didAdd) {
-        return false;
+        return 1;
     }
     if (game.state == GS.Playing) {
         //Game is on let's add the terrain for the non-believers
+        console.log(game.allTerrain);
         user.emit(game.roomNumber, "gamepresets", 2, getDistilledGame(game.roomNumber), game.allTerrain);
     }
 
@@ -219,7 +238,7 @@ function gameAddUser(user, game) {
     }
     console.log("Game ADDED USER " + game.roomNumber + " NOW STATUS " + game.state);
     emitToGame(game.roomNumber, 'actionHappened', 1, user.nickname + " joined the GAME");
-    return true;
+    return 0;
 }
 
 function len(array) {
@@ -298,11 +317,14 @@ io.on('connection', function(socket) {
             user.gameStatus = roomNumber - 1;
             //ADD MEE PLZ
             game = getGame(roomNumber - 1);
-            if(!gameAddUser(user, game)) {
+            var ret = gameAddUser(user, game);
+            if(ret == 1) { //Game is full
                 socket.emit("logincomplete",false,"The Game is currently Full");
-            } else {
+            } else if(ret == 0) { //game YES
                 socket.emit("logincomplete",true,"You have start");
                 didpush = true;
+            } else if(ret == 2) {
+                socket.emit("logincomplete",false,"Duplicate Username, plz change");
             }
         }
     });
@@ -343,7 +365,7 @@ io.on('connection', function(socket) {
         } else {
             console.log("HACKER--- DUPLICATE DISCONNECT");
         }
-        console.log('user disconnected');
+        // console.log('user disconnected');
     });
 
     function makeBullet(angle) {
@@ -437,7 +459,7 @@ setInterval(function() {
         var game = getGame(gameID);
         var isTie = false;
         if (!game.isPlaying) {
-            return;
+            continue;
         }
         var users = game.users;
         game.pointTime += 1;
@@ -487,6 +509,7 @@ setInterval(function() {
 function gamepresets(roomNumber) {
     console.log("SETUP");
     var game = getGame(roomNumber);
+    game.state = GS.Playing;
     game.isPlaying = true;
     var allTerrain = [];
 
@@ -510,7 +533,7 @@ var gameInterval = setInterval(function() {
         var game = getGame(gameID);
         var users = game.users;
         if (!game.isPlaying) {
-            return;
+            continue;
         }
         var allPlayers = [];
         var allBullets = [];
