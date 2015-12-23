@@ -8,15 +8,10 @@ app.use(bodyParser.urlencoded({ // to support URL-encoded bodies
 }));
 
 app.get('/', function(req, res) {
-
     res.sendFile(__dirname + '/index.html');
-    // res.sendFile(__dirname + '/HomeScreen.html');
-    // res.sendFile(__dirname + '/plzDoJudge.html');
 });
 app.get('/login', function(req, res) {
-
     res.sendFile(__dirname + '/HomeScreen.html');
-    // res.sendFile(__dirname + '/plzDoJudge.html');
 });
 app.post('/', function(req, res) {
     res.sendFile(__dirname + '/index.html');
