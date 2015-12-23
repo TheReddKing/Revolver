@@ -795,6 +795,6 @@ var gameInterval = setInterval(function() {
     }
 }, 1000 / 30); //Fps sending
 
-http.listen(3256, function() {
-    console.log('listening on *:3256');
+http.listen(443, function() {
+    console.log('listening on *:443');
 });
