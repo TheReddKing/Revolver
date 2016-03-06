@@ -72,7 +72,7 @@ GLOBAL_TOTALPOINTSINGAME = 14;
 GLOBAL_GAME_OCELETDISTANCE = 35;
 
 // GLOBAL_PANTKING_TIMEWIN = 3;
-// GLOBAL_TIMEINBETWEEN = 1;
+GLOBAL_TIMEINBETWEEN = 1;
 
 
 //Lets get the game lobby done guys
@@ -89,7 +89,7 @@ for (var v = 0; v < lobby.games.length; v++) {
         gameTime: 0,
         totalPoints: GLOBAL_TOTALPOINTSINGAME,
         users: new Array(8),
-        bots: new Array(6),
+        bots: new Array(3),
         specialStuff: null,
         allTerrain: [],
     };
@@ -241,10 +241,11 @@ function gameAddUser(user, game) {
             console.log("GAME: " + game.roomNumber + " -- CREATING BOTS");
             nextUserNum++;
             debugger;
-            for(var v=0;v<game.bots.length;v++) {
+            game.bots[0] = user;
+            for(var v=1;v<game.bots.length;v++) {
                 var user = {
                     id: nextUserNum,
-                    nickname: "^BOT^",
+                    nickname: "^BOT^" + v,
                     key: Math.round(Math.random() * 1000000),
                     location: {
                         x: 0,
@@ -506,34 +507,40 @@ function emitToGame(roomNumber, emitString, argSize) {
         this_game.users[i].emit(roomNumber, emitString, argSize, arguments[3], arguments[4], arguments[5]);
     }
 }
+function getUsersSortedByScore(game) {
+    var users = game.users;
+    game.pointTime += 1;
+    var localusers = [];
+    for (var i = 0; i < users.length; i++) {
+
+        if (users[i] == null || users[i].gameStatus < 0) // not connected or not
+            continue;
+        localusers.push({
+            id: users[i].id,
+            nickname: users[i].nickname,
+            points: users[i].points,
+            pointTime: users[i].pointTime
+        });
+    }
+
+    localusers.sort(function(a, b) {
+        return ((a.points < b.points) ? 1 : ((a.points > b.points) ? -1 : 0));
+    });
+    return localusers;
+}
 //1 second updater
 setInterval(function() {
     for (var gameID = 0; gameID < lobby.games.length; gameID++) {
         var game = getGame(gameID);
+        var users = game.users;
         var isTie = false;
         if (!game.isPlaying) {
             continue;
         }
-        var users = game.users;
-        game.pointTime += 1;
-        var localusers = [];
-        for (var i = 0; i < users.length; i++) {
-
-            if (users[i] == null || users[i].gameStatus < 0) // not connected or not
-                continue;
-            localusers.push({
-                id: users[i].id,
-                nickname: users[i].nickname,
-                points: users[i].points,
-                pointTime: users[i].pointTime
-            });
-        }
+        localusers = getUsersSortedByScore(game);
         if (localusers.length == 0) {
             return;
         }
-        localusers.sort(function(a, b) {
-            return ((a.points < b.points) ? 1 : ((a.points > b.points) ? -1 : 0));
-        });
         if (localusers.length > 1) {
             if (localusers[0].points == localusers[1].points) {
                 //there is tie
@@ -854,39 +861,39 @@ var gameInterval = setInterval(function() {
             }
         }
 
-        for (var i = 0; i < game.bots.length; i++) {
-            var u = game.bots[i];
+        // for (var i = 0; i < game.bots.length; i++) {
+        //     var u = game.bots[i];
 
-            if (u == null)
-                continue;
+        //     if (u == null)
+        //         continue;
 
-            //Literraly follows first player
-            // u.locationToward = game.users[0].locationToward;
+        //     //Literraly follows first player
+        //     // u.locationToward = game.users[0].locationToward;
 
-            if(Math.random() * 400 < 25) {
-                u.locationToward = {x:Math.random()*800,y:Math.random()*600};
-            }
+        //     if(Math.random() * 400 < 25) {
+        //         u.locationToward = {x:Math.random()*800,y:Math.random()*600};
+        //     }
 
-            var spacing = GLOBAL_GAME_OCELETDISTANCE;
-            var x = Math.cos(u.angle) * spacing + u.location.x;
-            var y = Math.sin(u.angle) * spacing + u.location.y;
-            for (var p = 0; p < users.length; p++) {
-                if(users[p] == null)
-                    continue;
-                var changeX = users[p].location.x - x;
-                var changeY = users[p].location.y - y;
-                var angle = Math.atan(changeY/changeX); // iN RADIANS
-                if(changeX < 0) {
-                    angle = Math.PI + angle;
-                }
-                var abs = Math.abs(u.angle - angle) % (Math.PI * 2);
-                if(abs < 0.2) {
-                    if(Math.random() * 100 < 50) {
-                        makeBullet(u.angle,u);
-                    }
-                }
-            }
-        }
+        //     var spacing = GLOBAL_GAME_OCELETDISTANCE;
+        //     var x = Math.cos(u.angle) * spacing + u.location.x;
+        //     var y = Math.sin(u.angle) * spacing + u.location.y;
+        //     for (var p = 0; p < users.length; p++) {
+        //         if(users[p] == null)
+        //             continue;
+        //         var changeX = users[p].location.x - x;
+        //         var changeY = users[p].location.y - y;
+        //         var angle = Math.atan(changeY/changeX); // iN RADIANS
+        //         if(changeX < 0) {
+        //             angle = Math.PI + angle;
+        //         }
+        //         var abs = Math.abs(u.angle - angle) % (Math.PI * 2);
+        //         if(abs < 0.2) {
+        //             if(Math.random() * 100 < 50) {
+        //                 makeBullet(u.angle,u);
+        //             }
+        //         }
+        //     }
+        // }
 
 
 
@@ -894,52 +901,75 @@ var gameInterval = setInterval(function() {
     }
 }, 1000 / 30); //Fps sending
 
-// setInterval(function() {
-//     //AI MOVING CODE
-//     for (var gameID = 0; gameID < lobby.games.length; gameID++) {
-//         var game = getGame(gameID);
-//         var users = game.users;
-//         if (!game.isPlaying) {
-//             continue;
-//         }
-//         for (var i = 0; i < game.bots.length; i++) {
-//             var u = game.bots[i];
+setInterval(function() {
+    //AI MOVING CODE
+    for (var gameID = 0; gameID < lobby.games.length; gameID++) {
+        var game = getGame(gameID);
+        var users = game.users;
+        if (!game.isPlaying) {
+            continue;
+        }
+        var localusers = getUsersSortedByScore(game);
+        var a1;
+        var a2;
+        for(var i = 0; i < users.length;i++) {
+            if(users[i] == null)
+                continue;
+            if(localusers.length > 0 && users[i].id == localusers[0].id) {
+                a1 = users[i].location;
+            } else if(localusers.length > 1 &&  users[i].id == localusers[1].id) {
+                a2 = users[i].location;
+            }
+        }
+        for (var i = 0; i < game.bots.length; i++) {
+            var u = game.bots[i];
 
-//             if (u == null)
-//                 continue;
+            if (u == null)
+                continue;
 
-//             //Literraly follows first player
-//             // u.locationToward = game.users[0].locationToward;
+            // u.locationToward = game.users[0].locationToward;
+            var random = Math.random() * 400;
+            if(random < 60) {
+                u.locationToward = {x:Math.random()*800,y:Math.random()*600};
+            } else if( random > 300) {
+                //Change the location slightly
+                u.locationToward = {x:Math.min(800,Math.max(0,u.locationToward.x + Math.random() * 50 - 25)), 
+                                    y:Math.min(600,Math.max(0,u.locationToward.y + Math.random() * 50 - 25))};
+            } else if(random > 290) {
+                if (localusers.length > 1) {
+                    if (localusers[0].points == localusers[1].points && Math.random() * 5 > 2) {
+                        u.locationToward = a1;
+                    } else {
+                        u.locationToward = a2;
+                    }
+                }
+            }
 
-//             if(Math.random() * 400 < 25) {
-//                 u.locationToward = {x:Math.random()*800,y:Math.random()*600};
-//             }
+            var spacing = GLOBAL_GAME_OCELETDISTANCE;
+            var x = Math.cos(u.angle) * spacing + u.location.x;
+            var y = Math.sin(u.angle) * spacing + u.location.y;
+            
+            for (var p = 0; p < users.length; p++) {
+                if(users[p] == null || users[p].id == u.id)
+                    continue;
+                var changeX = users[p].location.x - x;
+                var changeY = users[p].location.y - y;
+                var angle = Math.atan(changeY/changeX); // iN RADIANS
+                if(changeX < 0) {
+                    angle = Math.PI + angle;
+                }
+                var abs = Math.abs(u.angle - angle + Math.PI/2) % (Math.PI * 2);
+                if(abs < 0.1) {
+                    if(Math.random() * 100 < 95) {
+                        makeBullet(u.angle,u);
+                        break;
+                    }
+                }
+            }
+        }
+    }
 
-//             var spacing = GLOBAL_GAME_OCELETDISTANCE;
-//             var x = Math.cos(u.angle) * spacing + u.location.x;
-//             var y = Math.sin(u.angle) * spacing + u.location.y;
-//             for (var p = 0; p < users.length; p++) {
-//                 if(users[p] == null)
-//                     continue;
-//                 var changeX = users[p].location.x - x;
-//                 var changeY = users[p].location.y - y;
-//                 var angle = Math.atan(changeY/changeX); // iN RADIANS
-//                 if(changeX < 0) {
-//                     angle = Math.PI + angle;
-//                 }
-//                 var abs = Math.abs(u.angle - angle);
-//                 if(abs < 0.2) {
-//                     if(Math.random() * 100 < 50) {
-//                         makeBullet(u.angle,u);
-//                     }
-//                 }
-//             }
-
-
-//         }
-//     }
-
-// }, 1000);
+}, 50);
 http.listen((process.env.PORT || 5000), function() {
     console.log('listening on *:' + (process.env.PORT || 5000));
 });
