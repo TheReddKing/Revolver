@@ -1,7 +1,7 @@
 app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
-var bodyParser = require('body-parser')
+var bodyParser = require('body-parser');
 app.use(bodyParser.json()); // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({ // to support URL-encoded bodies
     extended: true
@@ -70,10 +70,11 @@ GLOBAL_TIMEINBETWEEN = 4;
 GLOBAL_TOTALPOINTSINGAME = 14;
 
 GLOBAL_GAME_OCELETDISTANCE = 35;
-
-// GLOBAL_PANTKING_TIMEWIN = 3;
+GLOBAL_GAME_SIZETERRAIN = 50;
+GLOBAL_GAME_SIZEPLAYER = 18;
+// GLOBAL_PANTKING_TIMEWIN = 30;
 GLOBAL_TIMEINBETWEEN = 1;
-
+GLOBAL_MAXUSERS = 8;
 
 //Lets get the game lobby done guys
 //First init all games
@@ -88,8 +89,8 @@ for (var v = 0; v < lobby.games.length; v++) {
         timeInterval: null,
         gameTime: 0,
         totalPoints: GLOBAL_TOTALPOINTSINGAME,
-        users: new Array(8),
-        bots: new Array(3),
+        users: new Array(GLOBAL_MAXUSERS),
+        bots: new Array(6),
         specialStuff: null,
         allTerrain: [],
     };
@@ -123,7 +124,7 @@ function gameLobby(gameID) {
 
     clearInterval(game.timeInterval);
     game.timeInterval = setInterval(function() {
-        if (len(getGame(gameID).users) == 0 || game.state == GS.NoUsers) {
+        if (lenRealUsers(getGame(gameID).users) == 0 || game.state == GS.NoUsers) {
             clearInterval(game.timeInterval);
         }
         if (game.state == GS.Playing) {
@@ -170,7 +171,7 @@ function gameInBetween(gameID) {
             }
         }
     }
-    if (len(game.users) == 0) {
+    if (lenRealUsers(game.users) == 0) {
         game.state = GS.NoUsers;
         return;
     }
@@ -189,9 +190,10 @@ function gameInBetween(gameID) {
             gamepresets(game.roomNumber);
             return;
         }
-        if (len(game.users) == 0) {
+        if (lenRealUsers(game.users) == 0) {
             //Everyone disappeared
             clearInterval(game.timeInterval);
+            game.users = new Array(GLOBAL_MAXUSERS);
             game.state = GS.NoUsers;
             console.log("Timer CLEARED");
         }
@@ -222,7 +224,20 @@ function gameAddUser(user, game) {
         }
     }
     if(!didAdd) {
-        return 1;
+        //WOW -- CAN I JOIN a bot!!
+        didAdd = false;
+        for (var v = 0; v < game.users.length; v++) {
+            if (game.users[v].isBot) {
+                game.totalPoints += game.users[v].points;
+                game.users[v].points = 0;
+                game.users[v] = user;
+                didAdd = true;
+                break;
+            }
+        }
+        if(!didAdd) {
+          return 1;
+        } 
     }
     if (game.state == GS.Playing) {
         //Game is on let's add the terrain for the non-believers
@@ -241,11 +256,11 @@ function gameAddUser(user, game) {
             console.log("GAME: " + game.roomNumber + " -- CREATING BOTS");
             nextUserNum++;
             debugger;
-            game.bots[0] = user;
+            // game.bots[0] = user;
             for(var v=1;v<game.bots.length;v++) {
                 var user = {
                     id: nextUserNum,
-                    nickname: "^BOT^" + v,
+                    nickname: "^BOT " + v,
                     key: Math.round(Math.random() * 1000000),
                     location: {
                         x: 0,
@@ -402,17 +417,40 @@ io.on('connection', function(socket) {
             emitToGame(game.roomNumber, 'actionHappened', 1, user.nickname + " disconnected");
 
             if (game != null) {
-                game.totalPoints += user.points;
-
+                game.totalPoints += user.points; //Bring back the points && bots....
+                for(var v=0;v<game.bots.length;v++) {
+                    var asdf = false;
+                    if(game.bots[v] == null) {
+                        continue;
+                    }
+                    ///ERORRRR
+                    //heck if exists
+                    for (var v = 0; v < game.users.length; v++) {
+                        if (game.users[v] == null) {
+                            game.users[v] = game.bots[v];
+                            game.bots[v].location = {x:0,y:0};
+                            asdf = true;
+                            break;
+                        }
+                    }
+                    if(asdf) {
+                        continue;
+                    } else {
+                        break;
+                    }
+                }
                 if (len(game.users) == 1) {
                   game.state = GS.Waiting4Two;
                   game.isPlaying = false;
                   gameLobby(game.roomNumber);
+                  console.log("GAME: " + game.roomNumber + " -- WAITING FOR TWO");
                 }
 
-                if (len(game.users) == 0) {
+                if (lenRealUsers(game.users) == 0) {
                   game.state = GS.NoUsers;
+                  game.users = new Array(GLOBAL_MAXUSERS);
                   game.isPlaying = false;
+                  console.log("GAME: " + game.roomNumber + " -- GAME STOPPED");
                 }
             }
         } else {
@@ -765,32 +803,70 @@ var gameInterval = setInterval(function() {
 				for(var t=0;t<game.allTerrain.length;t++){
 					if(collides(u,game.allTerrain[t],18,50))
 					{
+                        //IF IT COLLIDES
+
                         u.location.x -= changeX * mag;
                         u.location.y -= changeY * mag;
-						if(u.location.x==game.allTerrain[t].location.x)//if user collides straight vertically with terrain
-						{
-							if(u.location.y>game.allTerrain[t].location.y)
-							{
-								location.y=u.location.y+2;
-							}
-							else
-							{
-								location.y=u.location.y-2;
-							}
-						}
-						//console.log("user hit terrain");
-						var slope = (u.location.y-game.allTerrain[t].location.y)/(u.location.x-game.allTerrain[t].location.x);
+                        //BACKTRACK
+                        var dx = -game.allTerrain[t].location.x + u.location.x;
+                        var dy = -game.allTerrain[t].location.y + u.location.y;
+                        var angle = Math.atan(dy/dx);
+                        if(dx < 0) {
+                            angle = Math.PI + angle;
+                        }
+                        if(angle < 0) {
+                            angle += Math.PI*2;
+                        }
 
-						var changex = Math.sqrt(4/(1+(slope*slope)));
+                        dx = -game.allTerrain[t].location.x + u.locationToward.x;
+                        dy = -game.allTerrain[t].location.y + u.locationToward.y;
+                        var angle2 = Math.atan(dy/dx);
+                        if(dx < 0) {
+                            angle2 = Math.PI + angle2;
+                        } 
+                        if(angle2 < 0) {
+                            angle2 += Math.PI*2;
+                        }
+                        // console.log("CURRENT ANGLE " + parseFloat(angle).toFixed(2) + " " + parseFloat(angle2).toFixed(2));
+                        if((angle2 > angle && angle2 - angle <= Math.PI)  || (angle2+Math.PI*2 > angle && angle2+Math.PI*2 - angle <= Math.PI)) {
+                            //ADDING
+                            angle += m*1.0/(GLOBAL_GAME_SIZETERRAIN + GLOBAL_GAME_SIZEPLAYER);
+                        }
+                        else {
+                            angle -= m*1.0/(GLOBAL_GAME_SIZETERRAIN + GLOBAL_GAME_SIZEPLAYER);
+                        }
+                        u.location.x = Math.cos(angle)*(GLOBAL_GAME_SIZETERRAIN + GLOBAL_GAME_SIZEPLAYER) + game.allTerrain[t].location.x;
+                        u.location.y = Math.sin(angle)*(GLOBAL_GAME_SIZETERRAIN + GLOBAL_GAME_SIZEPLAYER) + game.allTerrain[t].location.y;
+                        // var angle = Math.atan(changeY/changeX);
+                        // if(Math.abs(angle) > Math.PI/4) {
+                        //     angle = Math.PI/2 - angle;
+                        // } else  {
+                        //     angle = Math.PI/2 + angle;
+                        // }
+                        // // if(angle > Math.PI/4) {
+                        // //     angle = Math.PI/2 - angle;
+                        // // } else if (angle > 0) {
+                        // //     angle = Math.PI/2 + angle;
+                        // // } else if (angle > -Math.PI/4) {
+                        // //     angle = Math.PI + angle;
+                        // // } else {
+                        // //     angle = Math.PI - angle;
+                        // // }
 
-						if(u.location.x<game.allTerrain[t].location.x)
-						{
-							//console.log("user hit from other side");
-							changex = -Math.sqrt(4/(1+(slope*slope)));
-						}
-						var changey = slope*changex;//this stuff moves the user back 2 units
-                        u.location.x += changex;
-                        u.location.y += changey;
+                        // u.location.x += m * Math.cos(angle);
+                        // u.location.y += m * Math.sin(angle);
+						// var slope = (u.location.y-game.allTerrain[t].location.y)/(u.location.x-game.allTerrain[t].location.x);
+
+						// var changex = Math.sqrt(4/(1+(slope*slope)));
+
+						// if(u.location.x<game.allTerrain[t].location.x)
+						// {
+						// 	//console.log("user hit from other side");
+						// 	changex = -Math.sqrt(4/(1+(slope*slope)));
+						// }
+						// var changey = slope*changex;//this stuff moves the user back 2 units
+      //                   u.location.x += changex;
+      //                   u.location.y += changey;
 					}
 				}
             }
@@ -928,6 +1004,7 @@ setInterval(function() {
                 continue;
 
             // u.locationToward = game.users[0].locationToward;
+            //BOTS DON"T MOVE
             var random = Math.random() * 400;
             if(random < 60) {
                 u.locationToward = {x:Math.random()*800,y:Math.random()*600};
@@ -944,6 +1021,12 @@ setInterval(function() {
                     }
                 }
             }
+            random = Math.random() * 100;
+            if(random < 5) {
+                u.rightClick = true;
+            } else if(random > 80) {
+                u.rightClick = false;
+            }
 
             var spacing = GLOBAL_GAME_OCELETDISTANCE;
             var x = Math.cos(u.angle) * spacing + u.location.x;
@@ -959,8 +1042,8 @@ setInterval(function() {
                     angle = Math.PI + angle;
                 }
                 var abs = Math.abs(u.angle - angle + Math.PI/2) % (Math.PI * 2);
-                if(abs < 0.1) {
-                    if(Math.random() * 100 < 95) {
+                if(abs < 0.2) {
+                    if(users[p].points > 0 && Math.random() * 100 < 95) {
                         makeBullet(u.angle,u);
                         break;
                     }
