@@ -237,7 +237,7 @@ function gameAddUser(user, game) {
         }
         if(!didAdd) {
           return 1;
-        } 
+        }
     }
     if (game.state == GS.Playing) {
         //Game is on let's add the terrain for the non-believers
@@ -417,6 +417,21 @@ io.on('connection', function(socket) {
             emitToGame(game.roomNumber, 'actionHappened', 1, user.nickname + " disconnected");
 
             if (game != null) {
+                if (len(game.users) == 1) {
+                  game.state = GS.Waiting4Two;
+                  game.isPlaying = false;
+                  gameLobby(game.roomNumber);
+                  console.log("GAME: " + game.roomNumber + " -- WAITING FOR TWO");
+                  return;
+                }
+                if (lenRealUsers(game.users) == 0) {
+                  game.state = GS.NoUsers;
+                  game.users = new Array(GLOBAL_MAXUSERS);
+                  game.isPlaying = false;
+                  console.log("GAME: " + game.roomNumber + " -- GAME STOPPED");
+                  return;
+                }
+
                 game.totalPoints += user.points; //Bring back the points && bots....
                 for(var v=0;v<game.bots.length;v++) {
                     var asdf = false;
@@ -439,19 +454,6 @@ io.on('connection', function(socket) {
                         break;
                     }
                 }
-                if (len(game.users) == 1) {
-                  game.state = GS.Waiting4Two;
-                  game.isPlaying = false;
-                  gameLobby(game.roomNumber);
-                  console.log("GAME: " + game.roomNumber + " -- WAITING FOR TWO");
-                }
-
-                if (lenRealUsers(game.users) == 0) {
-                  game.state = GS.NoUsers;
-                  game.users = new Array(GLOBAL_MAXUSERS);
-                  game.isPlaying = false;
-                  console.log("GAME: " + game.roomNumber + " -- GAME STOPPED");
-                }
             }
         } else {
             console.log("HACKER--- DUPLICATE DISCONNECT");
@@ -459,7 +461,7 @@ io.on('connection', function(socket) {
         // console.log('user disconnected');
     });
 
-    
+
     socket.on('bullet', function(angle) {
         makeBullet(angle,user);
     });
@@ -823,7 +825,7 @@ var gameInterval = setInterval(function() {
                         var angle2 = Math.atan(dy/dx);
                         if(dx < 0) {
                             angle2 = Math.PI + angle2;
-                        } 
+                        }
                         if(angle2 < 0) {
                             angle2 += Math.PI*2;
                         }
@@ -1010,7 +1012,7 @@ setInterval(function() {
                 u.locationToward = {x:Math.random()*800,y:Math.random()*600};
             } else if( random > 300) {
                 //Change the location slightly
-                u.locationToward = {x:Math.min(800,Math.max(0,u.locationToward.x + Math.random() * 50 - 25)), 
+                u.locationToward = {x:Math.min(800,Math.max(0,u.locationToward.x + Math.random() * 50 - 25)),
                                     y:Math.min(600,Math.max(0,u.locationToward.y + Math.random() * 50 - 25))};
             } else if(random > 290) {
                 if (localusers.length > 1) {
@@ -1031,7 +1033,7 @@ setInterval(function() {
             var spacing = GLOBAL_GAME_OCELETDISTANCE;
             var x = Math.cos(u.angle) * spacing + u.location.x;
             var y = Math.sin(u.angle) * spacing + u.location.y;
-            
+
             for (var p = 0; p < users.length; p++) {
                 if(users[p] == null || users[p].id == u.id)
                     continue;
@@ -1056,4 +1058,3 @@ setInterval(function() {
 http.listen((process.env.PORT || 5000), function() {
     console.log('listening on *:' + (process.env.PORT || 5000));
 });
-

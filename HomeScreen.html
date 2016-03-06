@@ -18,7 +18,9 @@
 	<div id="StartMenuWrapper" class='wrapper'>
 		<div class="startmenu" style="text-align: center">
 			<p class="title">Revolver</p>
-			<p id="subtitle">Where every shot is a 360 noscope!</p>
+			<p id="subtitle">Where every shot is a 360 noscope!
+			</p>
+
 			<!-- <form id="form" action="#" method="get" enctype="application/x-www-form-urlencoded"> -->
 			<p style="font-size: 12px">Username:</p>
 			<input required type="text" name="UserName" tabindex="0" autofocus placeholder="Enter username here" id="playerNameInput" maxlength="16">
@@ -53,7 +55,18 @@
 	    </div>
 
 	</div>
+	<div id="updates_popup" class='wrapper'>
 
+		<div class="startmenu" style="text-align: center">
+		<!-- Add an optional button to close the popup -->
+			<p class="title">Recent Updates!</p>
+			<br/>
+			<p><b>Version 1.2 (3/6/16):</b> <span style="color:blue;">*New!!</span><br/> You can play yourself now with bots in rooms 1-5 :) </p>
+			<p><b>Version 1.1 (12/23/15):</b><br/> First Release </p>
+			<button style="top:100px;" class="updates_popup_close">Close</button>
+		</div>
+
+	</div>
 	<div id="rules_popup" class='wrapper'>
 
 		<div class="startmenu" style="text-align: center">
@@ -74,6 +87,9 @@
       $('#share_popup').popup({
 		  transition: 'all 0.3s'
 		});
+        $('#updates_popup').popup({
+  		  transition: 'all 0.3s'
+  		});
 		$('#rules_popup').popup({
   		  transition: 'all 0.3s'
   		});
@@ -84,6 +100,8 @@
               <!-- <li><a href="http://twitter.com/gian_michelle">Twitter <i class="fa fa-twitter"></i></a></li> -->
               <!-- <li><a href="http://www.facebook.com/sharer/sharer.php?u=apps.reddolution.com/Apps/1015Revolver">Facebook<i class="fa fa-facebook"></i></a></li> -->
               <li><a class="share_popup_open" href="">Share Link<i class="fa fa-link"></i></a></li>
+              <li><a target="_blank" href="http://twitter.com/share?text=Play Revolver!&url=https://revolvergame.herokuapp.com/&hashtags=itsgoodforyou&">Twitter<i class="fa fa-twitter"></i></a></li>
+              <li><a class="updates_popup_open" href="">What's New!<i class="fa fa-bullhorn"></i></a></li>
               <!-- <li><a href="http://behance.net">Behance <i class="fa fa-behance"></i></a></li> -->
           </ul>
       </nav>
@@ -127,7 +145,7 @@
 		border: 3px solid #555;
 		background-color: #fff;
 	}
-	#share_popup, #rules_popup{
+	#share_popup, #rules_popup, #updates_popup{
 		width: 380px;
 		height: 200px;
 		margin:0px;
@@ -136,7 +154,7 @@
 		left: 0%;
   		transform: scale(0.8);
 	}
-	.popup_visible #share_popup,.popup_visible #rules_popup {
+	.popup_visible #share_popup,.popup_visible #rules_popup, #updates_popup {
 	 	transform: scale(1);
 	}
 	.title {
