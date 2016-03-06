@@ -69,6 +69,10 @@ GLOBAL_PANTKING_TIMEWIN = 30;
 GLOBAL_TIMEINBETWEEN = 4;
 GLOBAL_TOTALPOINTSINGAME = 14;
 
+GLOBAL_GAME_OCELETDISTANCE = 35;
+
+// GLOBAL_PANTKING_TIMEWIN = 3;
+// GLOBAL_TIMEINBETWEEN = 1;
 
 
 //Lets get the game lobby done guys
@@ -85,6 +89,7 @@ for (var v = 0; v < lobby.games.length; v++) {
         gameTime: 0,
         totalPoints: GLOBAL_TOTALPOINTSINGAME,
         users: new Array(8),
+        bots: new Array(6),
         specialStuff: null,
         allTerrain: [],
     };
@@ -123,7 +128,7 @@ function gameLobby(gameID) {
         }
         if (game.state == GS.Playing) {
             clearInterval(game.timeInterval);
-            console.log("Your right, lets start the game");
+            // console.log("Your right, lets start the game");
             gamepresets(game.roomNumber);
             return;
         }
@@ -132,6 +137,7 @@ function gameLobby(gameID) {
 }
 
 function gameInBetween(gameID) {
+    console.log("GAME: " + gameID+ " -- IS INBETWEEEN");
     var game = getGame(gameID); //hi
     //This is where I reset everything gameRelated
     game.gameTime = 0;
@@ -146,7 +152,6 @@ function gameInBetween(gameID) {
         if (u != null) {
             if (u.gameStatus < 0) { //Disconnected
                 game.users[v] = null;
-                console.log("DIE YOU SON OF A GUN");
             } else {
                 u.location = {
                     x: 0,
@@ -162,7 +167,6 @@ function gameInBetween(gameID) {
                 u.points = 0;
                 u.pointTime = 0;
                 u.rightClick = false;
-                console.log("LUCKILY YOUR MENTAL. RIP");
             }
         }
     }
@@ -231,14 +235,63 @@ function gameAddUser(user, game) {
         game.state = GS.Playing;
         game.isPlaying = true;
     } else if (game.state == GS.NoUsers) {
-        game.state = GS.Waiting4Two;
-        gameLobby(game.roomNumber); //Let's wait for 2
+        //if room 1-5
+        if(game.roomNumber < 5) {
+            //Init bots ---------------------------------------------------------------------------------
+            console.log("GAME: " + game.roomNumber + " -- CREATING BOTS");
+            nextUserNum++;
+            debugger;
+            for(var v=0;v<game.bots.length;v++) {
+                var user = {
+                    id: nextUserNum,
+                    nickname: "^BOT^",
+                    key: Math.round(Math.random() * 1000000),
+                    location: {
+                        x: 0,
+                        y: 0
+                    },
+                    locationToward: {
+                        x: 0,
+                        y: 0
+                    },
+                    gameStatus: game.roomNumber,
+                    angle: 0,
+                    canShoot: true,
+                    bullets: new Array(20),
+                    points: 0,
+                    pointTime: 0,
+                    rightClick: false,
+                    isBot: true,
+                    emit: function(){}
+                };
+                game.bots[v] = user;
+                for (var v = 0; v < game.users.length; v++) {
+                    if (game.users[v] == null) {
+                        game.users[v] = user;
+                        break;
+                    }
+                }
+                nextUserNum++;
+            }
+            gameLobby(game.roomNumber); //Let's wait for 2
+            game.state = GS.Playing;
+        } else {
+            game.state = GS.Waiting4Two;
+            gameLobby(game.roomNumber); //Let's wait for 2
+        }
     }
-    console.log("Game ADDED USER " + game.roomNumber + " NOW STATUS " + game.state);
+    console.log("GAME: " + game.roomNumber + " USER JOINED");
     emitToGame(game.roomNumber, 'actionHappened', 1, user.nickname + " joined the GAME");
     return 0;
 }
-
+function lenRealUsers(array) {
+    var length = 0;
+    for (var v = 0; v < array.length; v++) {
+        if (array[v] != null && array[v].isBot == false)
+            length += 1;
+    }
+    return length;
+}
 function len(array) {
     var length = 0;
     for (var v = 0; v < array.length; v++) {
@@ -287,6 +340,7 @@ io.on('connection', function(socket) {
         points: 0,
         pointTime: 0,
         rightClick: false,
+        isBot: false,
         emit: emit
     };
 
@@ -343,7 +397,7 @@ io.on('connection', function(socket) {
                     game.users[vvvv] = null; //Just plain remove him
                 }
             }
-            console.log("DISCONNECT -- NOW YOUR GAME IS " + user.gameStatus);
+            console.log("GAME: "+ game.roomNumber + " -- USER DISCONNECT");
             emitToGame(game.roomNumber, 'actionHappened', 1, user.nickname + " disconnected");
 
             if (game != null) {
@@ -366,37 +420,9 @@ io.on('connection', function(socket) {
         // console.log('user disconnected');
     });
 
-    function makeBullet(angle) {
-
-        if (user.canShoot) {
-            var spacing = 35;
-            var x = Math.cos(user.angle) * spacing + user.location.x;
-            var y = Math.sin(user.angle) * spacing + user.location.y;
-            var bullet = {
-                location: {
-                    x: x,
-                    y: y
-                },
-                angle: user.angle + (Math.PI / 2),
-                isExistant: true
-            };
-            // console.log(x + " " + y + "DELAY " + (user.angle-angle));
-            user.canShoot = false;
-
-            setTimeout(function() {
-                user.canShoot = true; //Reload Time
-                //makeBullet(angle); //ONLY FOR DEBUGGING DON'T TOUCH, PREDCIOUS COSDE. MY PRESCIOUSSS
-            }, 1000);
-            for (var i = 0; i < user.bullets.length; i++) {
-                if (user.bullets[i] == null || user.bullets[i].isExistant == false) {
-                    user.bullets[i] = bullet;
-                    break;
-                }
-            }
-        }
-    }
+    
     socket.on('bullet', function(angle) {
-        makeBullet(angle);
+        makeBullet(angle,user);
     });
     socket.on('requestUsers', function() {
         // var localusers = [];
@@ -428,6 +454,35 @@ io.on('connection', function(socket) {
         socket.emit('pong');
     });
 });
+function makeBullet(angle,user) {
+
+    if (user.canShoot) {
+        var spacing = GLOBAL_GAME_OCELETDISTANCE;
+        var x = Math.cos(user.angle) * spacing + user.location.x;
+        var y = Math.sin(user.angle) * spacing + user.location.y;
+        var bullet = {
+            location: {
+                x: x,
+                y: y
+            },
+            angle: user.angle + (Math.PI / 2),
+            isExistant: true
+        };
+        // console.log(x + " " + y + "DELAY " + (user.angle-angle));
+        user.canShoot = false;
+
+        setTimeout(function() {
+            user.canShoot = true; //Reload Time
+            //makeBullet(angle); //ONLY FOR DEBUGGING DON'T TOUCH, PREDCIOUS COSDE. MY PRESCIOUSSS
+        }, 1000);
+        for (var i = 0; i < user.bullets.length; i++) {
+            if (user.bullets[i] == null || user.bullets[i].isExistant == false) {
+                user.bullets[i] = bullet;
+                break;
+            }
+        }
+    }
+}
 
 function collides(a, b, ar, br) {
     // console.log(ar + " " + br);
@@ -500,22 +555,36 @@ setInterval(function() {
             gameInBetween(gameID);
         }
         emitToGame(game.roomNumber, 'updateusers', 2, localusers,isTie);
+        // gamepresets(game.roomNumber);
     }
 
 }, 1000); //Fps sending
 //Before game starts
 function gamepresets(roomNumber) {
-    console.log("SETUP");
+    console.log("GAME: " + roomNumber + " -- IS SETTING UP");
     var game = getGame(roomNumber);
     game.state = GS.Playing;
     game.isPlaying = true;
     var allTerrain = [];
-
+    var totalPlayers = len(game.users);
+    for (var v = 0; v < game.users.length; v++) {
+        var u = game.users[v];
+        if(u == null)
+            continue;
+        var degree = Math.PI/180.0*(90 + 360.0/(totalPlayers)*v);
+        u.location = {x:(400 + 350*Math.cos(degree)),y:(300 - 280*Math.sin(degree))};
+        u.locationToward = {x:(400 + 350*Math.cos(degree)),y:(300 - 280*Math.sin(degree))};
+        // console.log(u.location);
+    }
     for (var i = 0; i < 2; i++) {
+
+        var degree = Math.random()*Math.PI*2;
+        var distance = (Math.random()*200);
+
         var terrain = {
             location: {
-                x: Math.round(Math.random() * 600) + 75,
-                y: Math.round(Math.random() * 400) + 100
+                x: distance*Math.cos(degree) + 400,
+                y: -distance*Math.sin(degree) + 300
             }
         };
         allTerrain.push(terrain);
@@ -556,7 +625,7 @@ var gameInterval = setInterval(function() {
                         continue;
                     if (collides(users[u], bullets[b], 18, 8)) {
                         if (users[p].id != users[u].id) {
-                            console.log("COLLISION");
+                            // console.log("USER has been hit");
                             var ptChange = Math.round(users[u].points * 0.1 + 1);
                             if (game.totalPoints > 0) {
 
@@ -609,7 +678,7 @@ var gameInterval = setInterval(function() {
                         if (bullets2[b2] == null)
                             continue;
                         if (collides(bullets[b], bullets2[b2], 8, 8)) {
-                            console.log("BULLET ON BULLET COLLISION");
+                            // console.log("BULLET ON BULLET COLLISION");
                             var collision = {
                                 location: {
                                     x: bullets[b].location.x,
@@ -655,7 +724,7 @@ var gameInterval = setInterval(function() {
                 if (!bullets[b].isExistant)
                     continue;
                 if (bullets[b].location.x < -20 || bullets[b].location.x > 1020 || bullets[b].location.y < -20 || bullets[b].location.y > 620) {
-                    console.log("BYE BYE");
+                    // console.log("Bullet Collided with WALL");
                     bullets[b] = null;
                 }
             }
@@ -663,7 +732,7 @@ var gameInterval = setInterval(function() {
         //User movement ---------------------------------------------------------->
         for (var i = 0; i < users.length; i++) {
             var u = users[i];
-
+            debugger;
             if (u == null)
                 continue;
             if (u.gameStatus < 0) {
@@ -746,7 +815,7 @@ var gameInterval = setInterval(function() {
                     continue;
                 for (var t = 0; t < game.allTerrain.length; t++) {
                     if (collides(bullets[i], game.allTerrain[t], 8, 50)) {
-                        console.log("Bullet hit Terrain");
+                        // console.log("Bullet hit Terrain");
                         var collision = {
                             location: {
                                 x: bullets[i].location.x,
@@ -784,12 +853,94 @@ var gameInterval = setInterval(function() {
                 });
             }
         }
-        //
+
+        for (var i = 0; i < game.bots.length; i++) {
+            var u = game.bots[i];
+
+            if (u == null)
+                continue;
+
+            //Literraly follows first player
+            // u.locationToward = game.users[0].locationToward;
+
+            if(Math.random() * 400 < 25) {
+                u.locationToward = {x:Math.random()*800,y:Math.random()*600};
+            }
+
+            var spacing = GLOBAL_GAME_OCELETDISTANCE;
+            var x = Math.cos(u.angle) * spacing + u.location.x;
+            var y = Math.sin(u.angle) * spacing + u.location.y;
+            for (var p = 0; p < users.length; p++) {
+                if(users[p] == null)
+                    continue;
+                var changeX = users[p].location.x - x;
+                var changeY = users[p].location.y - y;
+                var angle = Math.atan(changeY/changeX); // iN RADIANS
+                if(changeX < 0) {
+                    angle = Math.PI + angle;
+                }
+                var abs = Math.abs(u.angle - angle) % (Math.PI * 2);
+                if(abs < 0.2) {
+                    if(Math.random() * 100 < 50) {
+                        makeBullet(u.angle,u);
+                    }
+                }
+            }
+        }
+
+
 
         emitToGame(gameID, 'data', 3, allPlayers, allBullets, allCollisions);
     }
 }, 1000 / 30); //Fps sending
 
+// setInterval(function() {
+//     //AI MOVING CODE
+//     for (var gameID = 0; gameID < lobby.games.length; gameID++) {
+//         var game = getGame(gameID);
+//         var users = game.users;
+//         if (!game.isPlaying) {
+//             continue;
+//         }
+//         for (var i = 0; i < game.bots.length; i++) {
+//             var u = game.bots[i];
+
+//             if (u == null)
+//                 continue;
+
+//             //Literraly follows first player
+//             // u.locationToward = game.users[0].locationToward;
+
+//             if(Math.random() * 400 < 25) {
+//                 u.locationToward = {x:Math.random()*800,y:Math.random()*600};
+//             }
+
+//             var spacing = GLOBAL_GAME_OCELETDISTANCE;
+//             var x = Math.cos(u.angle) * spacing + u.location.x;
+//             var y = Math.sin(u.angle) * spacing + u.location.y;
+//             for (var p = 0; p < users.length; p++) {
+//                 if(users[p] == null)
+//                     continue;
+//                 var changeX = users[p].location.x - x;
+//                 var changeY = users[p].location.y - y;
+//                 var angle = Math.atan(changeY/changeX); // iN RADIANS
+//                 if(changeX < 0) {
+//                     angle = Math.PI + angle;
+//                 }
+//                 var abs = Math.abs(u.angle - angle);
+//                 if(abs < 0.2) {
+//                     if(Math.random() * 100 < 50) {
+//                         makeBullet(u.angle,u);
+//                     }
+//                 }
+//             }
+
+
+//         }
+//     }
+
+// }, 1000);
 http.listen((process.env.PORT || 5000), function() {
     console.log('listening on *:' + (process.env.PORT || 5000));
 });
+
